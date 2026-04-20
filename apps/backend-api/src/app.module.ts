@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 
+import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { PermissionsGuard } from './common/auth/permissions.guard';
 import { appConfig } from './config/app.config';
 import { validateEnv } from './config/env.validation';
 import { QueueModule } from './core/queue/queue.module';
@@ -46,6 +49,16 @@ import { UsersModule } from './modules/users/users.module';
     ProofOfDeliveryModule,
     SettlementsModule,
     NotificationsModule
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard
+    }
   ]
 })
 export class AppModule {}

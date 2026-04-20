@@ -1,13 +1,27 @@
 import { Injectable } from '@nestjs/common';
 
-import { createFeatureStatus } from '../../common/feature-status';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class SettlementsService {
-  getFoundationStatus() {
-    return createFeatureStatus('settlements', [
-      'Settlement entities are reserved for financial reconciliation and payout flows.',
-      'Settlement calculation rules remain for Phase 2.'
-    ]);
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async listSettlements() {
+    const settlements = await this.prismaService.settlement.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        order: {
+          include: {
+            merchant: true
+          }
+        }
+      }
+    });
+
+    return {
+      settlements
+    };
   }
 }

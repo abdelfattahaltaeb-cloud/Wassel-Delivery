@@ -31,6 +31,33 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     });
   }
 
+  emitLocationUpdate(orderId: string | null, payload: unknown) {
+    if (!orderId) {
+      this.server.emit('tracking.location.updated', payload);
+
+      return;
+    }
+
+    this.server.to(orderId).emit('tracking.location.updated', payload);
+  }
+
+  @SubscribeMessage('tracking.subscribe-order')
+  subscribeToOrderRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { orderId: string }
+  ) {
+    client.join(payload.orderId);
+
+    return {
+      event: 'tracking.subscribe-order.ack',
+      data: {
+        orderId: payload.orderId,
+        socketId: client.id,
+        subscribedAt: new Date().toISOString()
+      }
+    };
+  }
+
   @SubscribeMessage('tracking.heartbeat')
   handleHeartbeat(
     @ConnectedSocket() client: Socket,

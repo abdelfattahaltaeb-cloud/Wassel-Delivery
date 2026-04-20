@@ -6,6 +6,12 @@ export const appConfig = registerAs('app', () => ({
   port: Number(process.env.PORT ?? 4000),
   apiPrefix: process.env.API_PREFIX ?? 'v1',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET ?? '<JWT_ACCESS_SECRET>',
+    refreshSecret: process.env.JWT_REFRESH_SECRET ?? '<JWT_REFRESH_SECRET>',
+    accessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
+    refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d'
+  },
   appVersion: process.env.APP_VERSION ?? '0.1.0',
   commitSha: process.env.COMMIT_SHA ?? 'local-dev',
   builtAt: process.env.BUILT_AT ?? new Date().toISOString(),

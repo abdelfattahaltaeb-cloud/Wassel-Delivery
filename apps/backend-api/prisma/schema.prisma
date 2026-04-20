@@ -15,156 +15,466 @@ enum UserStatus {
 
 enum DriverStatus {
   AVAILABLE
+  BUSY
   OFFLINE
   BLOCKED
 }
 
+enum VehicleType {
+  BIKE
+  CAR
+  VAN
+}
+
+enum DriverAvailabilityStatus {
+  AVAILABLE
+  OFFLINE
+  BREAK
+  ON_DELIVERY
+}
+
 enum OrderStatus {
-  DRAFT
   CREATED
   ASSIGNED
+  DRIVER_ACCEPTED
   PICKED_UP
+  IN_TRANSIT
   DELIVERED
+  FAILED_DELIVERY
   CANCELLED
 }
 
+enum OrderStopType {
+  PICKUP
+  DROPOFF
+}
+
+enum AssignmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum StatusActorType {
+  SYSTEM
+  ADMIN
+  DRIVER
+}
+
+enum ProofOfDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  EMAIL
+  INTERNAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum PricingRuleType {
+  BASE_FEE
+  DISTANCE
+  COD_SURCHARGE
+}
+
+enum PaymentCollectionType {
+  COD
+  PREPAID
+}
+
+enum SettlementDirection {
+  CREDIT
+  DEBIT
+}
+
+enum SettlementStatus {
+  PENDING
+  POSTED
+  REVERSED
+}
+
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  firstName    String
-  lastName     String
-  phoneNumber  String?
-  status       UserStatus @default(INVITED)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  userRoles    UserRole[]
-  customer     Customer?
-  driver       Driver?
+  id                        String          @id @default(cuid())
+  email                     String          @unique
+  passwordHash              String
+  refreshTokenHash          String?
+  firstName                 String
+  lastName                  String
+  phoneNumber               String?
+  status                    UserStatus      @default(INVITED)
+  lastLoginAt               DateTime?
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+  customer                  Customer?
+  driver                    Driver?
+  notifications             Notification[]
+  roleAssignments           UserRole[]
+  dispatchAssignments       Assignment[]    @relation("AssignmentAdminUser")
+  statusHistoryActorRecords StatusHistory[] @relation("StatusHistoryActorUser")
 }
 
 model Role {
-  id              String           @id @default(cuid())
-  code            String           @unique
-  name            String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  userRoles       UserRole[]
-  rolePermissions RolePermission[]
+  id               String           @id @default(cuid())
+  code             String           @unique
+  name             String
+  description      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  permissionGrants RolePermission[]
+  userAssignments  UserRole[]
 }
 
 model Permission {
-  id              String           @id @default(cuid())
-  code            String           @unique
-  name            String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  rolePermissions RolePermission[]
+  id           String           @id @default(cuid())
+  code         String           @unique
+  name         String
+  description  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  roleGrants   RolePermission[]
 }
 
 model UserRole {
-  userId     String
-  roleId     String
-  assignedAt DateTime @default(now())
-  role       Role     @relation(fields: [roleId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  userId      String
+  roleId      String
+  assignedAt  DateTime @default(now())
+  role        Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
+  @@index([roleId])
 }
 
 model RolePermission {
-  roleId       String
-  permissionId String
-  createdAt    DateTime   @default(now())
-  permission   Permission @relation(fields: [permissionId], references: [id])
-  role         Role       @relation(fields: [roleId], references: [id])
+  roleId        String
+  permissionId  String
+  createdAt     DateTime   @default(now())
+  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
+  @@index([permissionId])
 }
 
 model City {
-  id           String        @id @default(cuid())
-  name         String
-  code         String        @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  zones        Zone[]
-  serviceAreas ServiceArea[]
+  id            String        @id @default(cuid())
+  name          String
+  code          String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  merchants     Merchant[]
+  orders        Order[]
+  pricingRules  PricingRule[]
+  serviceAreas  ServiceArea[]
+  zones         Zone[]
 }
 
 model Zone {
-  id         String      @id @default(cuid())
-  name       String
-  code       String      @unique
-  cityId     String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  city       City        @relation(fields: [cityId], references: [id])
-  orders     Order[]
+  id            String        @id @default(cuid())
+  cityId        String
+  name          String
+  code          String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  city          City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  orders        Order[]
+  pricingRules  PricingRule[]
+  serviceAreas  ServiceArea[]
+
+  @@index([cityId])
 }
 
 model ServiceArea {
-  id         String   @id @default(cuid())
-  name       String
-  cityId     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  city       City     @relation(fields: [cityId], references: [id])
+  id                 String               @id @default(cuid())
+  cityId             String
+  zoneId             String
+  name               String
+  code               String               @unique
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  city               City                 @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  driverAvailability DriverAvailability[]
+  merchants          Merchant[]
+  orders             Order[]
+  pricingRules       PricingRule[]
+  zone               Zone                 @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@index([cityId])
+  @@index([zoneId])
 }
 
 model Merchant {
-  id           String   @id @default(cuid())
-  name         String
-  code         String   @unique
-  contactName  String?
-  contactPhone String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  orders       Order[]
+  id            String       @id @default(cuid())
+  cityId        String
+  serviceAreaId String?
+  name          String
+  code          String       @unique
+  contactName   String?
+  contactPhone  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  city          City         @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  orders        Order[]
+  serviceArea   ServiceArea? @relation(fields: [serviceAreaId], references: [id], onDelete: SetNull)
+
+  @@index([cityId])
+  @@index([serviceAreaId])
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  userId     String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id])
-  orders     Order[]
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  defaultAddressLine String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  orders             Order[]
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Driver {
-  id         String       @id @default(cuid())
-  userId      String       @unique
-  status      DriverStatus @default(OFFLINE)
-  vehicleType String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  user        User         @relation(fields: [userId], references: [id])
-  orders      Order[]
+  id                    String                 @id @default(cuid())
+  userId                String                 @unique
+  status                DriverStatus           @default(OFFLINE)
+  licenseNumber         String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  assignments           Assignment[]
+  availabilitySnapshots DriverAvailability[]
+  currentOrders         Order[]                @relation("CurrentDriverOrders")
+  locationUpdates       DriverLocationUpdate[]
+  ordersStatusHistory   StatusHistory[]        @relation("StatusHistoryActorDriver")
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle               Vehicle?
+}
+
+model Vehicle {
+  id          String      @id @default(cuid())
+  driverId    String      @unique
+  plateNumber String      @unique
+  type        VehicleType
+  make        String?
+  model       String?
+  color       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  driver      Driver      @relation(fields: [driverId], references: [id], onDelete: Cascade)
+}
+
+model DriverAvailability {
+  id            String                    @id @default(cuid())
+  driverId      String
+  serviceAreaId String?
+  status        DriverAvailabilityStatus
+  notes         String?
+  recordedAt    DateTime                  @default(now())
+  createdAt     DateTime                  @default(now())
+  driver        Driver                    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  serviceArea   ServiceArea?              @relation(fields: [serviceAreaId], references: [id], onDelete: SetNull)
+
+  @@index([driverId, recordedAt])
+  @@index([serviceAreaId])
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  referenceCode String      @unique
-  status        OrderStatus @default(DRAFT)
-  merchantId    String?
-  customerId    String?
-  driverId      String?
+  id                    String                @id @default(cuid())
+  referenceCode         String                @unique
+  publicTrackingCode    String                @unique
+  merchantId            String?
+  customerId            String?
+  cityId                String?
+  zoneId                String?
+  serviceAreaId         String?
+  assignedDriverId      String?
+  status                OrderStatus           @default(CREATED)
+  paymentCollectionType PaymentCollectionType @default(COD)
+  totalAmount           Decimal               @db.Decimal(10, 2)
+  codAmount             Decimal               @db.Decimal(10, 2)
+  notes                 String?
+  cancellationReason    String?
+  failureReason         String?
+  acceptedAt            DateTime?
+  pickedUpAt            DateTime?
+  deliveredAt           DateTime?
+  cancelledAt           DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  assignments           Assignment[]
+  assignedDriver        Driver?               @relation("CurrentDriverOrders", fields: [assignedDriverId], references: [id], onDelete: SetNull)
+  city                  City?                 @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  customer              Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  driverLocations       DriverLocationUpdate[]
+  merchant              Merchant?             @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  notifications         Notification[]
+  pricingRules          PricingRule[]         @relation("OrderPricingRules")
+  proofOfDelivery       ProofOfDelivery?
+  serviceArea           ServiceArea?          @relation(fields: [serviceAreaId], references: [id], onDelete: SetNull)
+  settlements           Settlement[]
+  statusHistory         StatusHistory[]
+  stops                 OrderStop[]
+  zone                  Zone?                 @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+
+  @@index([merchantId])
+  @@index([customerId])
+  @@index([status])
+  @@index([assignedDriverId])
+  @@index([cityId])
+  @@index([zoneId])
+  @@index([serviceAreaId])
+}
+
+model OrderStop {
+  id           String        @id @default(cuid())
+  orderId      String
+  sequence     Int
+  type         OrderStopType
+  label        String
+  contactName  String?
+  contactPhone String?
+  addressLine  String
+  latitude     Float?
+  longitude    Float?
+  notes        String?
+  completedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, sequence])
+  @@index([orderId])
+}
+
+model Assignment {
+  id               String           @id @default(cuid())
+  orderId          String
+  driverId         String
+  assignedByUserId String
+  status           AssignmentStatus @default(PENDING)
+  note             String?
+  assignedAt       DateTime         @default(now())
+  respondedAt      DateTime?
+  assignedByUser   User             @relation("AssignmentAdminUser", fields: [assignedByUserId], references: [id], onDelete: Restrict)
+  driver           Driver           @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  order            Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, assignedAt])
+  @@index([driverId, assignedAt])
+  @@index([assignedByUserId])
+}
+
+model StatusHistory {
+  id            String          @id @default(cuid())
+  orderId       String
+  status        OrderStatus
+  note          String?
+  actorType     StatusActorType
+  actorUserId   String?
+  actorDriverId String?
+  createdAt     DateTime        @default(now())
+  actorDriver   Driver?         @relation("StatusHistoryActorDriver", fields: [actorDriverId], references: [id], onDelete: SetNull)
+  actorUser     User?           @relation("StatusHistoryActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@index([actorUserId])
+  @@index([actorDriverId])
+}
+
+model ProofOfDelivery {
+  id                String                @id @default(cuid())
+  orderId           String                @unique
+  status            ProofOfDeliveryStatus @default(PENDING)
+  deliveredPhotoUrl String?
+  otpCode           String?
+  otpVerifiedAt     DateTime?
+  deliveredAt       DateTime?
+  failureReason     String?
+  recipientName     String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  order             Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model DriverLocationUpdate {
+  id             String    @id @default(cuid())
+  driverId       String
+  orderId        String?
+  latitude       Float
+  longitude      Float
+  accuracyMeters Float?
+  capturedAt     DateTime  @default(now())
+  driver         Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  order          Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([driverId, capturedAt])
+  @@index([orderId, capturedAt])
+}
+
+model Notification {
+  id            String             @id @default(cuid())
+  orderId       String?
+  userId        String?
+  channel       NotificationChannel
+  status        NotificationStatus @default(PENDING)
+  template      String
+  message       String
+  sentAt        DateTime?
+  failureReason String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  order         Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status, channel])
+}
+
+model PricingRule {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  name          String
+  type          PricingRuleType
+  cityId        String?
   zoneId        String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  customer      Customer?   @relation(fields: [customerId], references: [id])
-  driver        Driver?     @relation(fields: [driverId], references: [id])
-  merchant      Merchant?   @relation(fields: [merchantId], references: [id])
-  zone          Zone?       @relation(fields: [zoneId], references: [id])
-  settlements   Settlement[]
+  serviceAreaId String?
+  amount        Decimal         @db.Decimal(10, 2)
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  city          City?           @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  orders        Order[]         @relation("OrderPricingRules")
+  serviceArea   ServiceArea?    @relation(fields: [serviceAreaId], references: [id], onDelete: SetNull)
+  zone          Zone?           @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+
+  @@index([cityId])
+  @@index([zoneId])
+  @@index([serviceAreaId])
 }
 
 model Settlement {
-  id          String   @id @default(cuid())
+  id           String              @id @default(cuid())
   orderId      String
-  amount       Decimal  @db.Decimal(10, 2)
-  currencyCode String   @default("LYD")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  order        Order    @relation(fields: [orderId], references: [id])
+  direction    SettlementDirection
+  status       SettlementStatus    @default(PENDING)
+  amount       Decimal             @db.Decimal(10, 2)
+  currencyCode String              @default("LYD")
+  ledgerCode   String
+  description  String?
+  postedAt     DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
 }

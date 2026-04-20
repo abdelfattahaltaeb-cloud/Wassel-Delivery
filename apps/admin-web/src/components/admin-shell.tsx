@@ -5,12 +5,14 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { navigationItems } from '../lib/navigation';
+import type { SessionUser } from '../lib/auth';
 
 type AdminShellProps = {
+  user: SessionUser;
   children: ReactNode;
 };
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ user, children }: AdminShellProps) {
   const pathname = usePathname();
 
   return (
@@ -44,8 +46,13 @@ export function AdminShell({ children }: AdminShellProps) {
         <div className="status-panel">
           <span className="status-dot" />
           <div>
-            <p className="status-title">حالة التأسيس</p>
-            <p className="status-copy">واجهة الإدارة جاهزة للربط مع API المستقل في المرحلة التالية.</p>
+            <p className="status-title">جلسة تشغيلية نشطة</p>
+            <p className="status-copy">
+              {user.firstName} {user.lastName} · {user.roles.join(' / ')}
+            </p>
+            <a className="secondary-link inline-link" href="/logout">
+              تسجيل الخروج
+            </a>
           </div>
         </div>
       </aside>

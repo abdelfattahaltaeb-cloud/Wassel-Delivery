@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { loginAction } from './actions';
 
 export default function LoginPage() {
   return (
@@ -24,28 +24,28 @@ export default function LoginPage() {
           <p className="eyebrow">Admin Access</p>
           <h2 className="login-title">تسجيل الدخول</h2>
           <p className="login-copy">
-            شاشة دخول تأسيسية للربط لاحقاً مع خدمة الهوية المستقلة في الـ API الجديد.
+            شاشة دخول حية مرتبطة بخدمة المصادقة المستقلة في الـ API التشغيلي.
           </p>
         </div>
 
-        <form className="login-form">
+        <form className="login-form" action={loginAction}>
           <label className="field">
             <span className="input-label">البريد الوظيفي</span>
-            <input className="input" type="email" placeholder="ops@wassel.net.ly" disabled />
+            <input className="input" type="email" name="email" placeholder="ops@wassel.delivery" required />
           </label>
 
           <label className="field">
             <span className="input-label">كلمة المرور</span>
-            <input className="input" type="password" placeholder="••••••••" disabled />
+            <input className="input" type="password" name="password" placeholder="••••••••" required />
           </label>
 
-          <button className="submit-button" type="button" disabled>
-            ربط المصادقة في المرحلة التالية
+          <button className="submit-button" type="submit">
+            دخول إلى مركز التحكم
           </button>
         </form>
 
         <p className="helper-text">
-          للمعاينة الحالية، انتقل مباشرة إلى <Link href="/dashboard">لوحة التحكم</Link>.
+          يتم حفظ الجلسة في Cookies داخلية آمنة ومحمية من JavaScript على المتصفح.
         </p>
       </section>
     </div>

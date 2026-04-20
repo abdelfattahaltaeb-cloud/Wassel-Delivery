@@ -1,13 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { createFeatureStatus } from '../../common/feature-status';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class ProofOfDeliveryService {
+  constructor(private readonly prismaService: PrismaService) {}
+
   getFoundationStatus() {
-    return createFeatureStatus('proof-of-delivery', [
-      'Proof-of-delivery is reserved as its own operational boundary.',
-      'Media capture, signatures, and audit rules remain for Phase 2.'
-    ]);
+    return {
+      feature: 'proof-of-delivery',
+      supports: ['delivered-photo', 'otp-placeholder', 'failure-reason']
+    };
+  }
+
+  async getOrderProof(orderId: string) {
+    const proof = await this.prismaService.proofOfDelivery.findUnique({
+      where: { orderId }
+    });
+
+    if (!proof) {
+      throw new NotFoundException('Proof of delivery was not found for this order.');
+    }
+
+    return {
+      proof
+    };
   }
 }

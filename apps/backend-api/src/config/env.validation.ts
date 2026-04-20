@@ -38,6 +38,11 @@ export function validateEnv(config: EnvironmentInput) {
     JWT_REFRESH_SECRET: getRequiredString(config, 'JWT_REFRESH_SECRET'),
     JWT_ACCESS_TTL: typeof config.JWT_ACCESS_TTL === 'string' ? config.JWT_ACCESS_TTL : '15m',
     JWT_REFRESH_TTL: typeof config.JWT_REFRESH_TTL === 'string' ? config.JWT_REFRESH_TTL : '7d',
+    JWT_ISSUER: typeof config.JWT_ISSUER === 'string' ? config.JWT_ISSUER : 'wassel-delivery-api',
+    JWT_AUDIENCE:
+      typeof config.JWT_AUDIENCE === 'string'
+        ? config.JWT_AUDIENCE
+        : 'wassel-delivery-platform',
     REDIS_HOST: typeof config.REDIS_HOST === 'string' ? config.REDIS_HOST : '127.0.0.1',
     REDIS_PORT: getNumber(config, 'REDIS_PORT', 6379),
     REDIS_PASSWORD: typeof config.REDIS_PASSWORD === 'string' ? config.REDIS_PASSWORD : undefined,

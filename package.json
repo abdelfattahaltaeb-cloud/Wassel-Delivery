@@ -13,6 +13,7 @@
     "dev": "turbo run dev --parallel",
     "backend:dev": "pnpm --filter backend-api dev",
     "backend:build": "pnpm --filter backend-api build",
+    "backend:e2e": "pnpm --filter backend-api e2e",
     "admin:dev": "pnpm --filter admin-web dev",
     "admin:build": "pnpm --filter admin-web build",
     "mobile:customer": "cd apps/customer-app && flutter run",

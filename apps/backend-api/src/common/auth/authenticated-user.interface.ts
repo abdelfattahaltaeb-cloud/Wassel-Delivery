@@ -5,4 +5,6 @@ export type AuthenticatedUser = {
   lastName: string;
   roles: string[];
   permissions: string[];
+  sessionId?: string;
+  tokenFamilyId?: string;
 };

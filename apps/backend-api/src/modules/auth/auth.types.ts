@@ -14,4 +14,15 @@ export type JwtTokenPayload = {
   email: string;
   roles: string[];
   permissions: string[];
+  tokenType: 'access' | 'refresh';
+  sessionId: string;
+  tokenFamilyId: string;
+};
+
+export type IssuedSession = {
+  sessionId: string;
+  familyId: string;
+  expiresAt: Date;
+  accessToken: string;
+  refreshToken: string;
 };

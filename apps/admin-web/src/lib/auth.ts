@@ -2,9 +2,13 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { ApiError, apiFetch } from './api';
-
-export const accessTokenCookieName = 'wassel_delivery_admin_access_token';
-export const refreshTokenCookieName = 'wassel_delivery_admin_refresh_token';
+import {
+  accessTokenCookieName,
+  clearSessionCookieStore,
+  getAccessTokenCookieOptions,
+  getRefreshTokenCookieOptions,
+  refreshTokenCookieName
+} from './session';
 
 export type SessionUser = {
   id: string;
@@ -48,26 +52,10 @@ export async function getSessionUserOrRedirect() {
 export async function storeSession(tokens: { accessToken: string; refreshToken: string }) {
   const cookieStore = await cookies();
 
-  cookieStore.set(accessTokenCookieName, tokens.accessToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false,
-    path: '/',
-    maxAge: 60 * 15
-  });
-
-  cookieStore.set(refreshTokenCookieName, tokens.refreshToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false,
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7
-  });
+  cookieStore.set(accessTokenCookieName, tokens.accessToken, getAccessTokenCookieOptions(tokens.accessToken));
+  cookieStore.set(refreshTokenCookieName, tokens.refreshToken, getRefreshTokenCookieOptions(tokens.refreshToken));
 }
 
 export async function clearSession() {
-  const cookieStore = await cookies();
-
-  cookieStore.delete(accessTokenCookieName);
-  cookieStore.delete(refreshTokenCookieName);
+  clearSessionCookieStore(await cookies());
 }

@@ -2,9 +2,22 @@ import { Prisma, PrismaClient } from '@prisma/client';
 
 import { hashSecret } from '../src/common/security/password.util';
 
-const prisma = new PrismaClient();
+export const developmentSeedPassword = process.env.SEED_DEV_PASSWORD ?? 'DevOnly123!ChangeMe';
 
-const localDevPassword = process.env.SEED_LOCAL_PASSWORD ?? 'LocalDev123!';
+export const developmentSeedUsers = {
+  adminEmail: 'admin@wassel-delivery.local',
+  dispatcherEmail: 'dispatcher@wassel-delivery.local',
+  driverEmail: 'driver@wassel-delivery.local',
+  customerEmail: 'customer@wassel-delivery.local'
+} as const;
+
+export const developmentSeedTracking = {
+  deliveredTrackingCode: 'TRACK1001',
+  inTransitTrackingCode: 'TRACK1002',
+  createdTrackingCode: 'TRACK1003'
+} as const;
+
+const prisma = new PrismaClient();
 
 const permissionCatalog = [
   ['dashboard.summary.read', 'Read dashboard summary'],
@@ -60,21 +73,26 @@ const roleCatalog = [
   }
 ] as const;
 
-async function main() {
-  await resetDatabase();
+type SeedOptions = {
+  password?: string;
+};
 
-  const hashedPassword = hashSecret(localDevPassword);
+export async function seedDatabase(prismaClient: PrismaClient = prisma, options: SeedOptions = {}) {
+  assertDevelopmentSeedAllowed();
+  await resetDatabase(prismaClient);
 
-  await prisma.permission.createMany({
+  const hashedPassword = hashSecret(options.password ?? developmentSeedPassword);
+
+  await prismaClient.permission.createMany({
     data: permissionCatalog.map(([code, name]) => ({ code, name })),
     skipDuplicates: true
   });
 
-  const permissions = await prisma.permission.findMany();
+  const permissions = await prismaClient.permission.findMany();
   const permissionMap = new Map(permissions.map((permission) => [permission.code, permission.id]));
 
   for (const role of roleCatalog) {
-    await prisma.role.create({
+    await prismaClient.role.create({
       data: {
         code: role.code,
         name: role.name
@@ -82,10 +100,10 @@ async function main() {
     });
   }
 
-  const roles = await prisma.role.findMany();
+  const roles = await prismaClient.role.findMany();
   const roleMap = new Map(roles.map((role) => [role.code, role.id]));
 
-  await prisma.rolePermission.createMany({
+  await prismaClient.rolePermission.createMany({
     data: roleCatalog.flatMap((role) =>
       role.permissions.map((permissionCode) => ({
         roleId: roleMap.get(role.code)!,
@@ -95,14 +113,14 @@ async function main() {
     skipDuplicates: true
   });
 
-  const tripoli = await prisma.city.create({
+  const tripoli = await prismaClient.city.create({
     data: {
       name: 'Tripoli',
       code: 'TIP'
     }
   });
 
-  const downtownZone = await prisma.zone.create({
+  const downtownZone = await prismaClient.zone.create({
     data: {
       cityId: tripoli.id,
       name: 'Downtown',
@@ -110,7 +128,7 @@ async function main() {
     }
   });
 
-  const downtownServiceArea = await prisma.serviceArea.create({
+  const downtownServiceArea = await prismaClient.serviceArea.create({
     data: {
       cityId: tripoli.id,
       zoneId: downtownZone.id,
@@ -119,7 +137,7 @@ async function main() {
     }
   });
 
-  await prisma.pricingRule.createMany({
+  await prismaClient.pricingRule.createMany({
     data: [
       {
         code: 'BASE-TRIPOLI',
@@ -138,7 +156,7 @@ async function main() {
     ]
   });
 
-  const merchant = await prisma.merchant.create({
+  const merchant = await prismaClient.merchant.create({
     data: {
       cityId: tripoli.id,
       serviceAreaId: downtownServiceArea.id,
@@ -149,9 +167,9 @@ async function main() {
     }
   });
 
-  const adminUser = await prisma.user.create({
+  const adminUser = await prismaClient.user.create({
     data: {
-      email: 'admin@wassel-delivery.local',
+      email: developmentSeedUsers.adminEmail,
       passwordHash: hashedPassword,
       firstName: 'Platform',
       lastName: 'Admin',
@@ -160,9 +178,9 @@ async function main() {
     }
   });
 
-  const dispatcherUser = await prisma.user.create({
+  const dispatcherUser = await prismaClient.user.create({
     data: {
-      email: 'dispatcher@wassel-delivery.local',
+      email: developmentSeedUsers.dispatcherEmail,
       passwordHash: hashedPassword,
       firstName: 'Dispatch',
       lastName: 'Lead',
@@ -171,9 +189,9 @@ async function main() {
     }
   });
 
-  const driverUser = await prisma.user.create({
+  const driverUser = await prismaClient.user.create({
     data: {
-      email: 'driver@wassel-delivery.local',
+      email: developmentSeedUsers.driverEmail,
       passwordHash: hashedPassword,
       firstName: 'Sami',
       lastName: 'Driver',
@@ -182,9 +200,9 @@ async function main() {
     }
   });
 
-  const customerUser = await prisma.user.create({
+  const customerUser = await prismaClient.user.create({
     data: {
-      email: 'customer@wassel-delivery.local',
+      email: developmentSeedUsers.customerEmail,
       passwordHash: hashedPassword,
       firstName: 'Lina',
       lastName: 'Customer',
@@ -193,7 +211,7 @@ async function main() {
     }
   });
 
-  await prisma.userRole.createMany({
+  await prismaClient.userRole.createMany({
     data: [
       { userId: adminUser.id, roleId: roleMap.get('super_admin')! },
       { userId: dispatcherUser.id, roleId: roleMap.get('dispatcher')! },
@@ -201,14 +219,14 @@ async function main() {
     ]
   });
 
-  const customer = await prisma.customer.create({
+  const customer = await prismaClient.customer.create({
     data: {
       userId: customerUser.id,
       defaultAddressLine: 'Shara Omar Almukhtar, Tripoli'
     }
   });
 
-  const driver = await prisma.driver.create({
+  const driver = await prismaClient.driver.create({
     data: {
       userId: driverUser.id,
       status: 'BUSY',
@@ -216,7 +234,7 @@ async function main() {
     }
   });
 
-  await prisma.vehicle.create({
+  await prismaClient.vehicle.create({
     data: {
       driverId: driver.id,
       plateNumber: '5-12345',
@@ -227,7 +245,7 @@ async function main() {
     }
   });
 
-  await prisma.driverAvailability.create({
+  await prismaClient.driverAvailability.create({
     data: {
       driverId: driver.id,
       serviceAreaId: downtownServiceArea.id,
@@ -236,10 +254,10 @@ async function main() {
     }
   });
 
-  const deliveredOrder = await prisma.order.create({
+  const deliveredOrder = await prismaClient.order.create({
     data: {
       referenceCode: 'WDL-SEED-1001',
-      publicTrackingCode: 'TRACK1001',
+      publicTrackingCode: developmentSeedTracking.deliveredTrackingCode,
       merchantId: merchant.id,
       customerId: customer.id,
       cityId: tripoli.id,
@@ -349,10 +367,10 @@ async function main() {
     }
   });
 
-  const inTransitOrder = await prisma.order.create({
+  const inTransitOrder = await prismaClient.order.create({
     data: {
       referenceCode: 'WDL-SEED-1002',
-      publicTrackingCode: 'TRACK1002',
+      publicTrackingCode: developmentSeedTracking.inTransitTrackingCode,
       merchantId: merchant.id,
       customerId: customer.id,
       cityId: tripoli.id,
@@ -445,10 +463,10 @@ async function main() {
     }
   });
 
-  const createdOrder = await prisma.order.create({
+  const createdOrder = await prismaClient.order.create({
     data: {
       referenceCode: 'WDL-SEED-1003',
-      publicTrackingCode: 'TRACK1003',
+      publicTrackingCode: developmentSeedTracking.createdTrackingCode,
       merchantId: merchant.id,
       customerId: customer.id,
       cityId: tripoli.id,
@@ -486,58 +504,78 @@ async function main() {
     }
   });
 
-  console.log(
-    JSON.stringify(
-      {
-        seeded: true,
-        cityId: tripoli.id,
-        serviceAreaId: downtownServiceArea.id,
-        merchantId: merchant.id,
-        driverId: driver.id,
-        customerId: customer.id,
-        orderIds: [deliveredOrder.id, inTransitOrder.id, createdOrder.id],
-        users: {
-          adminEmail: adminUser.email,
-          dispatcherEmail: dispatcherUser.email,
-          driverEmail: driverUser.email
-        }
-      },
-      null,
-      2
-    )
-  );
+  return {
+    seeded: true,
+    developmentOnly: true,
+    warning:
+      'Seeded accounts are development-only and must never be used in production or shared environments.',
+    passwordEnvironmentVariable: 'SEED_DEV_PASSWORD',
+    cityId: tripoli.id,
+    zoneId: downtownZone.id,
+    serviceAreaId: downtownServiceArea.id,
+    merchantId: merchant.id,
+    driverId: driver.id,
+    customerId: customer.id,
+    orderIds: [deliveredOrder.id, inTransitOrder.id, createdOrder.id],
+    users: {
+      adminEmail: adminUser.email,
+      dispatcherEmail: dispatcherUser.email,
+      driverEmail: driverUser.email,
+      customerEmail: customerUser.email
+    },
+    trackingCodes: developmentSeedTracking
+  };
 }
 
-async function resetDatabase() {
-  await prisma.notification.deleteMany();
-  await prisma.settlement.deleteMany();
-  await prisma.proofOfDelivery.deleteMany();
-  await prisma.driverLocationUpdate.deleteMany();
-  await prisma.statusHistory.deleteMany();
-  await prisma.assignment.deleteMany();
-  await prisma.orderStop.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.driverAvailability.deleteMany();
-  await prisma.vehicle.deleteMany();
-  await prisma.driver.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.merchant.deleteMany();
-  await prisma.pricingRule.deleteMany();
-  await prisma.serviceArea.deleteMany();
-  await prisma.zone.deleteMany();
-  await prisma.city.deleteMany();
-  await prisma.userRole.deleteMany();
-  await prisma.rolePermission.deleteMany();
-  await prisma.permission.deleteMany();
-  await prisma.role.deleteMany();
-  await prisma.user.deleteMany();
+export async function resetDatabase(prismaClient: PrismaClient = prisma) {
+  await prismaClient.refreshSession.deleteMany();
+  await prismaClient.notification.deleteMany();
+  await prismaClient.settlement.deleteMany();
+  await prismaClient.proofOfDelivery.deleteMany();
+  await prismaClient.driverLocationUpdate.deleteMany();
+  await prismaClient.statusHistory.deleteMany();
+  await prismaClient.assignment.deleteMany();
+  await prismaClient.orderStop.deleteMany();
+  await prismaClient.order.deleteMany();
+  await prismaClient.driverAvailability.deleteMany();
+  await prismaClient.vehicle.deleteMany();
+  await prismaClient.driver.deleteMany();
+  await prismaClient.customer.deleteMany();
+  await prismaClient.merchant.deleteMany();
+  await prismaClient.pricingRule.deleteMany();
+  await prismaClient.serviceArea.deleteMany();
+  await prismaClient.zone.deleteMany();
+  await prismaClient.city.deleteMany();
+  await prismaClient.userRole.deleteMany();
+  await prismaClient.rolePermission.deleteMany();
+  await prismaClient.permission.deleteMany();
+  await prismaClient.role.deleteMany();
+  await prismaClient.user.deleteMany();
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+function assertDevelopmentSeedAllowed() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'The seed script is blocked in production. Seeded credentials are development-only.'
+    );
+  }
+}
+
+async function main() {
+  const result = await seedDatabase(prisma);
+
+  console.log(JSON.stringify(result, null, 2));
+}
+
+const isMainModule = typeof require !== 'undefined' && require.main === module;
+
+if (isMainModule) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

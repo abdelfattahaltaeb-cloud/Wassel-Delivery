@@ -1,0 +1,19 @@
+name: wassel_mobile
+description: Shared mobile API client and repositories for Wassel Delivery.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: ^9.2.4
+  http: ^1.5.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: false

@@ -17,14 +17,14 @@ export class OrdersController {
 
   @RequirePermissions('orders.read')
   @Get()
-  listOrders(@Query('status') status?: string) {
-    return this.ordersService.listOrders(status);
+  listOrders(@Query('status') status: string | undefined, @CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.listOrders(status, user);
   }
 
   @RequirePermissions('orders.read')
   @Get(':orderId')
-  getOrder(@Param('orderId') orderId: string) {
-    return this.ordersService.getOrderById(orderId);
+  getOrder(@Param('orderId') orderId: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.getOrderById(orderId, user);
   }
 
   @RequirePermissions('orders.write')

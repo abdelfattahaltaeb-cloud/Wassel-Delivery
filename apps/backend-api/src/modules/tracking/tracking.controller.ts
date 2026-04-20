@@ -22,8 +22,8 @@ export class TrackingController {
 
   @RequirePermissions('tracking.read')
   @Get('orders/:orderId/timeline')
-  getOrderTimeline(@Param('orderId') orderId: string) {
-    return this.trackingService.getOrderTimeline(orderId);
+  getOrderTimeline(@Param('orderId') orderId: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.trackingService.getOrderTimeline(orderId, user);
   }
 
   @Public()

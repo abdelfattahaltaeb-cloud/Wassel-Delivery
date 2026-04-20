@@ -70,6 +70,11 @@ const roleCatalog = [
     code: 'driver',
     name: 'Driver',
     permissions: ['orders.read', 'orders.write', 'tracking.write']
+  },
+  {
+    code: 'customer',
+    name: 'Customer',
+    permissions: ['orders.read', 'orders.write', 'tracking.read']
   }
 ] as const;
 
@@ -215,7 +220,8 @@ export async function seedDatabase(prismaClient: PrismaClient = prisma, options:
     data: [
       { userId: adminUser.id, roleId: roleMap.get('super_admin')! },
       { userId: dispatcherUser.id, roleId: roleMap.get('dispatcher')! },
-      { userId: driverUser.id, roleId: roleMap.get('driver')! }
+      { userId: driverUser.id, roleId: roleMap.get('driver')! },
+      { userId: customerUser.id, roleId: roleMap.get('customer')! }
     ]
   });
 

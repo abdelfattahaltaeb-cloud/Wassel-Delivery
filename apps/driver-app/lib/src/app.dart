@@ -1,62 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:wassel_mobile/wassel_mobile.dart';
 
 import 'core/app_router.dart';
 import 'core/app_theme.dart';
+import 'features/driver_root.dart';
 import 'l10n/app_localizations.dart';
 
-class DriverApp extends StatelessWidget {
+class DriverApp extends StatefulWidget {
   const DriverApp({super.key});
+
+  @override
+  State<DriverApp> createState() => _DriverAppState();
+}
+
+class _DriverAppState extends State<DriverApp> {
+  late final WasselMobileEnvironment _environment;
+  late final WasselApiClient _client;
+  late final AuthRepository _authRepository;
+  late final OrdersRepository _ordersRepository;
+  late final TrackingRepository _trackingRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    _environment = WasselMobileEnvironment.current();
+    _client = WasselApiClient(
+      environment: _environment,
+      sessionNamespace: 'driver',
+    );
+    _authRepository = AuthRepository(_client);
+    _ordersRepository = OrdersRepository(_client);
+    _trackingRepository = TrackingRepository(_client);
+  }
 
   @override
   Widget build(BuildContext context) {
     const descriptor = MobileAppDescriptor(
       appName: 'تطبيق السائقين',
       appTagline: 'أساس تشغيلي مستقل للمهام، التوصيل، والدخل',
-      environmentLabel: 'Driver foundation',
+      environmentLabel: 'Driver live API',
       seedColor: Color(0xFF1C4E80),
     );
-
-    const routes = [
-      MobilePlaceholderRoute(
-        path: '/dashboard',
-        label: 'المهام',
-        title: 'المهام',
-        description:
-            'نقطة الانطلاق اليومية للسائق لرؤية المهام والحالة التشغيلية.',
-        detail:
-            'سيتم ربطها لاحقاً بمهام الاستلام والتسليم والتنبيهات المباشرة.',
-        icon: Icons.dashboard_rounded,
-      ),
-      MobilePlaceholderRoute(
-        path: '/deliveries',
-        label: 'التوصيلات',
-        title: 'التوصيلات',
-        description: 'شاشة لمتابعة الرحلات الجارية والمقبلة ضمن دورة التوصيل.',
-        detail: 'ستربط لاحقاً بخرائط الطريق، حالات الطلب، وإثبات التسليم.',
-        icon: Icons.local_shipping_rounded,
-      ),
-      MobilePlaceholderRoute(
-        path: '/earnings',
-        label: 'الأرباح',
-        title: 'الأرباح',
-        description: 'واجهة تمهيدية لعرض الأداء اليومي ومستحقات السائق.',
-        detail: 'ستتكامل لاحقاً مع التسويات وسجل الحركات المالية.',
-        icon: Icons.payments_rounded,
-      ),
-      MobilePlaceholderRoute(
-        path: '/profile',
-        label: 'الحساب',
-        title: 'الحساب',
-        description: 'إعدادات السائق، الملف الشخصي، والحالة التشغيلية.',
-        detail: 'سيتم توصيلها لاحقاً بالمستندات، التوافر، وقنوات الدعم.',
-        icon: Icons.person_pin_rounded,
-      ),
-    ];
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Wassel Delivery Driver',
+      locale: const Locale('ar'),
       theme: buildAppTheme(descriptor.seedColor),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -65,11 +55,14 @@ class DriverApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      onGenerateRoute: buildAppRouteFactory(
+      home: DriverRootScreen(
         descriptor: descriptor,
-        routes: routes,
+        environment: _environment,
+        client: _client,
+        authRepository: _authRepository,
+        ordersRepository: _ordersRepository,
+        trackingRepository: _trackingRepository,
       ),
-      initialRoute: routes.first.path,
     );
   }
 }

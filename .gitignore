@@ -1,9 +1,15 @@
 node_modules/
+.flutter-plugins
+.flutter-plugins-dependencies
 .turbo/
 dist/
 coverage/
 .next/
 out/
+.dart_tool/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
 *.tsbuildinfo
 *.log
 .DS_Store

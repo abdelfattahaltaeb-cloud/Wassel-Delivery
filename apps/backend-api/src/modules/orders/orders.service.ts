@@ -82,17 +82,23 @@ const orderDetailInclude = {
   }
 } as const;
 
+type OrderRecord = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
+
 @Injectable()
 export class OrdersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async listOrders(status?: string) {
+  async listOrders(status: string | undefined, user: AuthenticatedUser) {
+    const accessWhere = await this.resolveOrderAccessWhere(user);
     const orders = await this.prismaService.order.findMany({
-      where: status
-        ? {
-            status: status as Prisma.OrderScalarWhereInput['status']
-          }
-        : undefined,
+      where: {
+        ...accessWhere,
+        ...(status
+          ? {
+              status: status as Prisma.OrderScalarWhereInput['status']
+            }
+          : {})
+      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -117,8 +123,9 @@ export class OrdersService {
     };
   }
 
-  async getOrderById(orderId: string) {
+  async getOrderById(orderId: string, user: AuthenticatedUser) {
     const order = await this.findOrderOrThrow(orderId);
+    await this.assertOrderAccessible(order, user);
 
     return {
       order
@@ -126,12 +133,15 @@ export class OrdersService {
   }
 
   async createOrder(body: CreateOrderDto, user: AuthenticatedUser) {
+    this.assertCanCreateOrders(user);
+    const customerId = await this.resolveCustomerIdForCreate(user, body.customerId);
+
     const createdOrder = await this.prismaService.order.create({
       data: {
         referenceCode: this.generateReferenceCode(),
         publicTrackingCode: this.generatePublicTrackingCode(),
         merchantId: body.merchantId,
-        customerId: body.customerId,
+        customerId,
         cityId: body.cityId,
         zoneId: body.zoneId,
         serviceAreaId: body.serviceAreaId,
@@ -179,6 +189,7 @@ export class OrdersService {
   }
 
   async manualAssignDriver(orderId: string, body: ManualAssignDriverDto, user: AuthenticatedUser) {
+    this.assertOperationsUser(user, 'Only operations users can manually assign drivers.');
     const order = await this.findOrderOrThrow(orderId);
     await this.ensureMutableOrder(order.status);
     await this.ensureDriverExists(body.driverId);
@@ -222,6 +233,7 @@ export class OrdersService {
   }
 
   async driverAccept(orderId: string, body: TransitionNoteDto, user: AuthenticatedUser) {
+    this.assertDriverLifecycleUser(user);
     const order = await this.findOrderOrThrow(orderId);
     this.assertStatus(order.status, ['ASSIGNED']);
 
@@ -271,6 +283,7 @@ export class OrdersService {
   }
 
   async pickupOrder(orderId: string, body: TransitionNoteDto, user: AuthenticatedUser) {
+    this.assertDriverLifecycleUser(user);
     const order = await this.findOrderOrThrow(orderId);
     this.assertStatus(order.status, ['DRIVER_ACCEPTED']);
     const actor = await this.resolveActor(order, user);
@@ -284,6 +297,7 @@ export class OrdersService {
   }
 
   async markInTransit(orderId: string, body: TransitionNoteDto, user: AuthenticatedUser) {
+    this.assertDriverLifecycleUser(user);
     const order = await this.findOrderOrThrow(orderId);
     this.assertStatus(order.status, ['PICKED_UP']);
     const actor = await this.resolveActor(order, user);
@@ -296,6 +310,7 @@ export class OrdersService {
   }
 
   async deliverOrder(orderId: string, body: DeliverOrderDto, user: AuthenticatedUser) {
+    this.assertDriverLifecycleUser(user);
     const order = await this.findOrderOrThrow(orderId);
     this.assertStatus(order.status, ['PICKED_UP', 'IN_TRANSIT']);
     const actor = await this.resolveActor(order, user);
@@ -366,6 +381,7 @@ export class OrdersService {
   }
 
   async failDelivery(orderId: string, body: FailDeliveryDto, user: AuthenticatedUser) {
+    this.assertDriverLifecycleUser(user);
     const order = await this.findOrderOrThrow(orderId);
     this.assertStatus(order.status, ['PICKED_UP', 'IN_TRANSIT']);
     const actor = await this.resolveActor(order, user);
@@ -415,7 +431,12 @@ export class OrdersService {
   }
 
   async cancelOrder(orderId: string, body: CancelOrderDto, user: AuthenticatedUser) {
+    if (user.roles.includes('driver')) {
+      throw new ForbiddenException('Drivers cannot cancel orders through this endpoint.');
+    }
+
     const order = await this.findOrderOrThrow(orderId);
+    await this.assertOrderAccessible(order, user);
     await this.ensureMutableOrder(order.status);
     const actor = await this.resolveActor(order, user, true);
 
@@ -483,6 +504,20 @@ export class OrdersService {
     return order;
   }
 
+  private async assertOrderAccessible(order: OrderRecord, user: AuthenticatedUser) {
+    if (user.roles.includes('driver')) {
+      if (order.assignedDriver?.userId !== user.id) {
+        throw new ForbiddenException('This driver cannot access the requested order.');
+      }
+
+      return;
+    }
+
+    if (user.roles.includes('customer') && order.customer?.userId !== user.id) {
+      throw new ForbiddenException('This customer cannot access the requested order.');
+    }
+  }
+
   private async ensureDriverExists(driverId: string) {
     const driver = await this.prismaService.driver.findUnique({
       where: { id: driverId }
@@ -494,7 +529,7 @@ export class OrdersService {
   }
 
   private async resolveDriverActor(
-    order: Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>,
+    order: OrderRecord,
     user: AuthenticatedUser
   ) {
     if (user.roles.includes('driver')) {
@@ -529,7 +564,7 @@ export class OrdersService {
   }
 
   private async resolveActor(
-    order: Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>,
+    order: OrderRecord,
     user: AuthenticatedUser,
     adminOnly = false
   ) {
@@ -574,6 +609,72 @@ export class OrdersService {
     if (['DELIVERED', 'FAILED_DELIVERY', 'CANCELLED'].includes(status)) {
       throw new BadRequestException('The order can no longer be changed.');
     }
+  }
+
+  private assertOperationsUser(user: AuthenticatedUser, message: string) {
+    if (user.roles.includes('driver') || user.roles.includes('customer')) {
+      throw new ForbiddenException(message);
+    }
+  }
+
+  private assertDriverLifecycleUser(user: AuthenticatedUser) {
+    if (user.roles.includes('customer')) {
+      throw new ForbiddenException('Customers cannot update delivery lifecycle states.');
+    }
+  }
+
+  private assertCanCreateOrders(user: AuthenticatedUser) {
+    if (user.roles.includes('driver')) {
+      throw new ForbiddenException('Drivers cannot create new orders.');
+    }
+  }
+
+  private async resolveOrderAccessWhere(user: AuthenticatedUser): Promise<Prisma.OrderWhereInput> {
+    if (user.roles.includes('driver')) {
+      const driver = await this.prismaService.driver.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!driver) {
+        throw new ForbiddenException('Authenticated driver identity was not found.');
+      }
+
+      return {
+        assignedDriverId: driver.id
+      };
+    }
+
+    if (user.roles.includes('customer')) {
+      const customer = await this.prismaService.customer.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!customer) {
+        throw new ForbiddenException('Authenticated customer identity was not found.');
+      }
+
+      return {
+        customerId: customer.id
+      };
+    }
+
+    return {};
+  }
+
+  private async resolveCustomerIdForCreate(user: AuthenticatedUser, requestedCustomerId?: string) {
+    if (!user.roles.includes('customer')) {
+      return requestedCustomerId;
+    }
+
+    const customer = await this.prismaService.customer.findUnique({
+      where: { userId: user.id }
+    });
+
+    if (!customer) {
+      throw new ForbiddenException('Authenticated customer identity was not found.');
+    }
+
+    return customer.id;
   }
 
   private generateReferenceCode() {

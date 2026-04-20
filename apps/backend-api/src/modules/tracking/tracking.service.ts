@@ -40,7 +40,7 @@ export class TrackingService {
     };
   }
 
-  async getOrderTimeline(orderId: string) {
+  async getOrderTimeline(orderId: string, user: AuthenticatedUser) {
     const order = await this.prismaService.order.findUnique({
       where: { id: orderId },
       include: {
@@ -71,6 +71,8 @@ export class TrackingService {
     if (!order) {
       throw new NotFoundException('Order was not found.');
     }
+
+    await this.assertTrackingAccess(order, user);
 
     return {
       tracking: {
@@ -156,5 +158,35 @@ export class TrackingService {
     }
 
     return candidateDriverId;
+  }
+
+  private async assertTrackingAccess(
+    order: {
+      assignedDriverId: string | null;
+      customerId: string | null;
+    },
+    user: AuthenticatedUser
+  ) {
+    if (user.roles.includes('driver')) {
+      const driver = await this.prismaService.driver.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!driver || order.assignedDriverId != driver.id) {
+        throw new ForbiddenException('This driver cannot access the requested tracking timeline.');
+      }
+
+      return;
+    }
+
+    if (user.roles.includes('customer')) {
+      const customer = await this.prismaService.customer.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!customer || order.customerId != customer.id) {
+        throw new ForbiddenException('This customer cannot access the requested tracking timeline.');
+      }
+    }
   }
 }

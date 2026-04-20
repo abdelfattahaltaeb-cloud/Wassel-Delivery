@@ -1,0 +1,25 @@
+{
+  "name": "wassel-delivery",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.24.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "check": "turbo run check",
+    "dev": "turbo run dev --parallel",
+    "backend:dev": "pnpm --filter backend-api dev",
+    "backend:build": "pnpm --filter backend-api build",
+    "admin:dev": "pnpm --filter admin-web dev",
+    "admin:build": "pnpm --filter admin-web build",
+    "mobile:customer": "cd apps/customer-app && flutter run",
+    "mobile:driver": "cd apps/driver-app && flutter run",
+    "mobile:admin": "cd apps/admin-mobile && flutter run"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.3"
+  }
+}

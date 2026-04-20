@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  backend-and-admin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Run checks
+        run: pnpm check
+
+      - name: Build applications
+        run: pnpm build
+
+  flutter-foundations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Customer app analyze
+        working-directory: apps/customer-app
+        run: |
+          flutter pub get
+          flutter analyze
+
+      - name: Driver app analyze
+        working-directory: apps/driver-app
+        run: |
+          flutter pub get
+          flutter analyze
+
+      - name: Admin mobile analyze
+        working-directory: apps/admin-mobile
+        run: |
+          flutter pub get
+          flutter analyze

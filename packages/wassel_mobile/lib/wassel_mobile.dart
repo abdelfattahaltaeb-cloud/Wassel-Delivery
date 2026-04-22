@@ -8,3 +8,4 @@ export 'src/repositories/auth_repository.dart';
 export 'src/repositories/operations_repository.dart';
 export 'src/repositories/orders_repository.dart';
 export 'src/repositories/tracking_repository.dart';
+export 'src/testing/smoke_backend.dart';

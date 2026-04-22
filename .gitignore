@@ -24,3 +24,6 @@ apps/backend-api/prisma/dev.db
 apps/backend-api/prisma/*.db
 apps/backend-api/prisma/*.db-journal
 apps/backend-api/.e2e-dist/
+**/android/key.properties
+**/*.jks
+**/*.keystore

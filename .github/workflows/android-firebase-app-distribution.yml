@@ -1,0 +1,229 @@
+name: Android Firebase Distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Android app to build and distribute
+        required: true
+        type: choice
+        options:
+          - customer-app
+          - driver-app
+          - admin-mobile
+      tester_groups:
+        description: Optional comma-separated Firebase tester groups override
+        required: false
+        default: ""
+      release_notes_suffix:
+        description: Optional extra release-notes text
+        required: false
+        default: ""
+
+concurrency:
+  group: android-firebase-distribution-${{ github.ref }}-${{ inputs.app }}
+  cancel-in-progress: false
+
+jobs:
+  distribute-android:
+    name: Distribute ${{ inputs.app }} Android
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve distribution configuration
+        id: config
+        env:
+          CUSTOMER_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID_CUSTOMER_ANDROID }}
+          DRIVER_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID_DRIVER_ANDROID }}
+          ADMIN_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID_ADMIN_MOBILE_ANDROID }}
+          DEFAULT_TESTER_GROUPS: ${{ secrets.FIREBASE_APP_DISTRIBUTION_GROUPS_ANDROID }}
+        run: |
+          set -euo pipefail
+
+          case "${{ inputs.app }}" in
+            customer-app)
+              app_dir="apps/customer-app"
+              app_name="Customer App"
+              package_name="com.example.customer_app"
+              firebase_app_id="$CUSTOMER_FIREBASE_APP_ID"
+              ;;
+            driver-app)
+              app_dir="apps/driver-app"
+              app_name="Driver App"
+              package_name="com.example.driver_app"
+              firebase_app_id="$DRIVER_FIREBASE_APP_ID"
+              ;;
+            admin-mobile)
+              app_dir="apps/admin-mobile"
+              app_name="Admin Mobile"
+              package_name="com.example.admin_mobile"
+              firebase_app_id="$ADMIN_FIREBASE_APP_ID"
+              ;;
+            *)
+              echo "Unsupported app selection: ${{ inputs.app }}" >&2
+              exit 1
+              ;;
+          esac
+
+          tester_groups="${{ inputs.tester_groups }}"
+          if [[ -z "$tester_groups" ]]; then
+            tester_groups="$DEFAULT_TESTER_GROUPS"
+          fi
+
+          if [[ -z "$firebase_app_id" ]]; then
+            echo "Missing Firebase App ID secret for ${{ inputs.app }}." >&2
+            exit 1
+          fi
+
+          if [[ -z "$tester_groups" ]]; then
+            echo "No tester groups supplied. Set workflow input tester_groups or FIREBASE_APP_DISTRIBUTION_GROUPS_ANDROID." >&2
+            exit 1
+          fi
+
+          artifact_name="${{ inputs.app }}-android-release-${GITHUB_SHA::7}"
+          artifact_path="$app_dir/build/app/outputs/flutter-apk/app-release.apk"
+
+          {
+            echo "APP_DIR=$app_dir"
+            echo "APP_NAME=$app_name"
+            echo "PACKAGE_NAME=$package_name"
+            echo "FIREBASE_APP_ID=$firebase_app_id"
+            echo "TESTER_GROUPS=$tester_groups"
+            echo "ARTIFACT_NAME=$artifact_name"
+            echo "ARTIFACT_PATH=$artifact_path"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "app_dir=$app_dir"
+            echo "app_name=$app_name"
+            echo "package_name=$package_name"
+            echo "firebase_app_id=$firebase_app_id"
+            echo "tester_groups=$tester_groups"
+            echo "artifact_name=$artifact_name"
+            echo "artifact_path=$artifact_path"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "release_notes<<EOF"
+            echo "App: $app_name"
+            echo "Branch: ${GITHUB_REF_NAME}"
+            echo "Commit: ${GITHUB_SHA}"
+            if [[ -n "${{ inputs.release_notes_suffix }}" ]]; then
+              echo "Notes: ${{ inputs.release_notes_suffix }}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate required CI secrets
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT_JSON }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for secret_name in \
+            FIREBASE_SERVICE_ACCOUNT_JSON \
+            ANDROID_KEYSTORE_BASE64 \
+            ANDROID_KEYSTORE_PASSWORD \
+            ANDROID_KEY_ALIAS \
+            ANDROID_KEY_PASSWORD
+          do
+            if [[ -z "${!secret_name}" ]]; then
+              echo "Missing required secret: $secret_name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Prepare Firebase credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          credentials_path="$RUNNER_TEMP/firebase-app-distribution-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$credentials_path"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_path" >> "$GITHUB_ENV"
+
+      - name: Prepare Android signing files
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          signing_dir="$RUNNER_TEMP/android-signing"
+          mkdir -p "$signing_dir"
+          keystore_path="$signing_dir/upload-keystore.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+
+          cat > "$APP_DIR/android/key.properties" <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=$keystore_path
+          EOF
+
+      - name: Install Flutter dependencies
+        working-directory: ${{ steps.config.outputs.app_dir }}
+        run: flutter pub get
+
+      - name: Build Android release APK
+        working-directory: ${{ steps.config.outputs.app_dir }}
+        run: flutter build apk --release
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.config.outputs.artifact_name }}
+          path: ${{ steps.config.outputs.artifact_path }}
+          if-no-files-found: error
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Upload to Firebase App Distribution
+        run: |
+          set -euo pipefail
+          firebase appdistribution:distribute "$ARTIFACT_PATH" \
+            --app "$FIREBASE_APP_ID" \
+            --groups "$TESTER_GROUPS" \
+            --release-notes "$release_notes"
+
+      - name: Publish workflow summary
+        run: |
+          {
+            echo "## Android Firebase Distribution"
+            echo ""
+            echo "- App: $APP_NAME"
+            echo "- Package: $PACKAGE_NAME"
+            echo "- Branch: ${GITHUB_REF_NAME}"
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Artifact: $ARTIFACT_NAME"
+            echo "- Artifact path: $ARTIFACT_PATH"
+            echo "- Tester groups: $TESTER_GROUPS"
+            echo "- Firebase upload: completed by Firebase CLI step"
+          } >> "$GITHUB_STEP_SUMMARY"

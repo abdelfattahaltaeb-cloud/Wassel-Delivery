@@ -58,3 +58,7 @@ docs/
 - Production and staging environment examples use placeholders only and must be replaced with environment-specific secrets outside git.
 
 See the docs folder for architecture, environment setup, domain planning, and detailed local run instructions.
+
+## Distribution docs
+
+- Android real-device distribution through Firebase App Distribution is documented in `docs/android-firebase-app-distribution.md`.

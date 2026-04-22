@@ -1,4 +1,4 @@
-package com.example.admin_mobile
+package com.wassel.admin_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

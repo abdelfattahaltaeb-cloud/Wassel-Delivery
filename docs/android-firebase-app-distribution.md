@@ -23,13 +23,13 @@ Recommended Firebase project placeholder:
 
 - `<FIREBASE_PROJECT_ID>`
 
-Current Android package names in the repository are still placeholders. You can keep them for internal testing or replace them before wider rollout.
+Current Android package names in the repository are:
 
 | App | App folder | Current package name | Placeholder for future final package |
 | --- | --- | --- | --- |
-| Customer app | `apps/customer-app` | `com.example.customer_app` | `<CUSTOMER_ANDROID_APPLICATION_ID>` |
-| Driver app | `apps/driver-app` | `com.example.driver_app` | `<DRIVER_ANDROID_APPLICATION_ID>` |
-| Admin mobile | `apps/admin-mobile` | `com.example.admin_mobile` | `<ADMIN_MOBILE_ANDROID_APPLICATION_ID>` |
+| Customer app | `apps/customer-app` | `com.wassel.customer_app` | `<CUSTOMER_ANDROID_APPLICATION_ID>` |
+| Driver app | `apps/driver-app` | `com.wassel.driver_app` | `<DRIVER_ANDROID_APPLICATION_ID>` |
+| Admin mobile | `apps/admin-mobile` | `com.wassel.admin_mobile` | `<ADMIN_MOBILE_ANDROID_APPLICATION_ID>` |
 
 If you change package names later, update the matching Android registration in Firebase before running distribution again.
 

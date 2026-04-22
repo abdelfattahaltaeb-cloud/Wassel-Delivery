@@ -66,19 +66,19 @@ jobs:
             customer-app)
               app_dir="apps/customer-app"
               app_name="Customer App"
-              package_name="com.example.customer_app"
+              package_name="com.wassel.customer_app"
               firebase_app_id="$CUSTOMER_FIREBASE_APP_ID"
               ;;
             driver-app)
               app_dir="apps/driver-app"
               app_name="Driver App"
-              package_name="com.example.driver_app"
+              package_name="com.wassel.driver_app"
               firebase_app_id="$DRIVER_FIREBASE_APP_ID"
               ;;
             admin-mobile)
               app_dir="apps/admin-mobile"
               app_name="Admin Mobile"
-              package_name="com.example.admin_mobile"
+              package_name="com.wassel.admin_mobile"
               firebase_app_id="$ADMIN_FIREBASE_APP_ID"
               ;;
             *)

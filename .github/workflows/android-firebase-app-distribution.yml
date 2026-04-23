@@ -63,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          api_base_url="https://api.wassel.org.ly/api"
+          api_base_url="https://api.wassel.net.ly/api"
 
           case "${{ inputs.app }}" in
             customer-app)
@@ -71,27 +71,27 @@ jobs:
               app_name="Customer App"
               package_name="com.wassel.customer_app"
               firebase_app_id="$CUSTOMER_FIREBASE_APP_ID"
-              login_path="/customer/login"
-              refresh_path="/customer/refresh"
-              logout_path="/customer/logout"
+              login_path="/auth/login"
+              refresh_path="/auth/refresh"
+              logout_path="/auth/logout"
               ;;
             driver-app)
               app_dir="apps/driver-app"
               app_name="Driver App"
               package_name="com.wassel.driver_app"
               firebase_app_id="$DRIVER_FIREBASE_APP_ID"
-              login_path="/agent/login"
-              refresh_path=""
-              logout_path=""
+              login_path="/auth/login"
+              refresh_path="/auth/refresh"
+              logout_path="/auth/logout"
               ;;
             admin-mobile)
               app_dir="apps/admin-mobile"
               app_name="Admin Mobile"
               package_name="com.wassel.admin_mobile"
               firebase_app_id="$ADMIN_FIREBASE_APP_ID"
-              login_path="/admin/login"
-              refresh_path=""
-              logout_path=""
+              login_path="/auth/login"
+              refresh_path="/auth/refresh"
+              logout_path="/auth/logout"
               ;;
             *)
               echo "Unsupported app selection: ${{ inputs.app }}" >&2
@@ -120,8 +120,13 @@ jobs:
             exit 1
           fi
 
+          if [[ "$api_base_url" != "https://api.wassel.net.ly/api" ]]; then
+            echo "Distribution builds must use only https://api.wassel.net.ly/api. Refusing API base URL: $api_base_url" >&2
+            exit 1
+          fi
+
           if [[ "$api_host" == "localhost" || "$api_host" == "::1" || "$api_host" == 127.* || "$api_host" == 10.* || "$api_host" == 192.168.* || "$api_host" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\. ]]; then
-            echo "Distribution builds must use a reachable remote API endpoint. Refusing API base URL: $api_base_url" >&2
+            echo "Distribution builds must use the dedicated Wassel Delivery API endpoint. Refusing API base URL: $api_base_url" >&2
             exit 1
           fi
 

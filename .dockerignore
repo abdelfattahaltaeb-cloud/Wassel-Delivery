@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+**/node_modules
+**/.dart_tool
+**/build
+**/.next
+**/dist
+**/coverage
+**/.turbo
+**/*.log
+bundle*.js
+chunks.txt
+run*.json
+apps/*/android/key.properties
+release.jks
+wassel.keystore

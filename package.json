@@ -16,6 +16,8 @@
     "backend:e2e": "pnpm --filter backend-api e2e",
     "admin:dev": "pnpm --filter admin-web dev",
     "admin:build": "pnpm --filter admin-web build",
+    "public:dev": "pnpm --filter public-web dev",
+    "public:build": "pnpm --filter public-web build",
     "mobile:customer": "cd apps/customer-app && flutter run",
     "mobile:driver": "cd apps/driver-app && flutter run",
     "mobile:admin": "cd apps/admin-mobile && flutter run"

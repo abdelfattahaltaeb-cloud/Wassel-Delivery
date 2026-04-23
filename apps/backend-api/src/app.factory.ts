@@ -20,7 +20,7 @@ export async function createApp() {
 
 function configureApp(app: INestApplication) {
   const configService = app.get(ConfigService);
-  const apiPrefix = configService.get<string>('API_PREFIX', 'v1');
+  const apiPrefix = configService.get<string>('API_PREFIX', 'api');
   const corsOrigin = configService.get<string>('CORS_ORIGIN', '*');
 
   app.useGlobalPipes(

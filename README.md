@@ -9,6 +9,7 @@ The repository now includes:
 - a clean pnpm monorepo for the independent Wassel Delivery platform
 - a NestJS backend with JWT auth, RBAC, Prisma, PostgreSQL, Redis, BullMQ, live tracking, dispatch, proof of delivery, and settlement foundations
 - a Next.js admin web with server-side auth, middleware-based route protection, and production-safe session cookie controls
+- a dedicated Next.js public website for `wassel.net.ly`
 - backend end-to-end coverage for auth rotation, protected routes, orders, dispatch transitions, public tracking, and dashboard summary flows
 - three Flutter mobile foundations for customer, driver, and admin operations
 - shared packages for types, config, and API contracts
@@ -20,6 +21,7 @@ The repository now includes:
 apps/
   backend-api/
   admin-web/
+  public-web/
   customer-app/
   driver-app/
   admin-mobile/

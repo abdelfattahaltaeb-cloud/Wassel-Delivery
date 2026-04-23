@@ -31,7 +31,7 @@ export function validateEnv(config: EnvironmentInput) {
     ...config,
     NODE_ENV: typeof config.NODE_ENV === 'string' ? config.NODE_ENV : 'development',
     PORT: getNumber(config, 'PORT', 4000),
-    API_PREFIX: typeof config.API_PREFIX === 'string' ? config.API_PREFIX : 'v1',
+    API_PREFIX: typeof config.API_PREFIX === 'string' ? config.API_PREFIX : 'api',
     CORS_ORIGIN: typeof config.CORS_ORIGIN === 'string' ? config.CORS_ORIGIN : '*',
     DATABASE_URL: getRequiredString(config, 'DATABASE_URL'),
     JWT_ACCESS_SECRET: getRequiredString(config, 'JWT_ACCESS_SECRET'),
@@ -43,7 +43,7 @@ export function validateEnv(config: EnvironmentInput) {
       typeof config.JWT_AUDIENCE === 'string'
         ? config.JWT_AUDIENCE
         : 'wassel-delivery-platform',
-    REDIS_HOST: typeof config.REDIS_HOST === 'string' ? config.REDIS_HOST : '127.0.0.1',
+    REDIS_HOST: typeof config.REDIS_HOST === 'string' ? config.REDIS_HOST : 'redis',
     REDIS_PORT: getNumber(config, 'REDIS_PORT', 6379),
     REDIS_PASSWORD: typeof config.REDIS_PASSWORD === 'string' ? config.REDIS_PASSWORD : undefined,
     APP_VERSION: typeof config.APP_VERSION === 'string' ? config.APP_VERSION : '0.1.0',

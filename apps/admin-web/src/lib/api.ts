@@ -1,4 +1,4 @@
-const fallbackApiBaseUrl = 'http://127.0.0.1:4000/v1';
+const fallbackApiBaseUrl = 'https://api.wassel.net.ly/api';
 
 export class ApiError extends Error {
   constructor(

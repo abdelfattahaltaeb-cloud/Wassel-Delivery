@@ -51,10 +51,7 @@ class SessionUser {
     };
   }
 
-  static String? _readString(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
       final value = json[key];
       if (value == null) {
@@ -131,10 +128,7 @@ class AuthSession {
     return null;
   }
 
-  static String? _readString(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
       final value = json[key];
       if (value == null) {

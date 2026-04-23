@@ -10,7 +10,7 @@ class SmokeBackend {
   static SmokeBackend current() {
     final configuredBaseUrl = const String.fromEnvironment(
       'WASSEL_API_BASE_URL',
-      defaultValue: 'http://127.0.0.1:4000/v1',
+      defaultValue: 'https://api.wassel.net.ly/api',
     );
     final normalizedBaseUrl = configuredBaseUrl.endsWith('/')
         ? configuredBaseUrl.substring(0, configuredBaseUrl.length - 1)

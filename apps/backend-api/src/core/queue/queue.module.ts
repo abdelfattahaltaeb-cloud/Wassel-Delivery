@@ -12,7 +12,7 @@ import { notificationsQueueName } from './queue.constants';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         connection: {
-          host: configService.get<string>('REDIS_HOST', '127.0.0.1'),
+          host: configService.get<string>('REDIS_HOST', 'redis'),
           port: configService.get<number>('REDIS_PORT', 6379),
           password: configService.get<string>('REDIS_PASSWORD')
         }

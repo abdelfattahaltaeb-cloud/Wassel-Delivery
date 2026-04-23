@@ -21,7 +21,7 @@ class WasselMobileEnvironment {
     final apiBaseUrl = _normalizedBaseUrl(
       const String.fromEnvironment(
         'WASSEL_API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:4000/v1',
+        defaultValue: 'https://api.wassel.net.ly/api',
       ),
     );
     _assertSupportedReleaseApiBaseUrl(apiBaseUrl);
@@ -87,9 +87,9 @@ class WasselMobileEnvironment {
     final host = (uri?.host.isNotEmpty == true ? uri!.host : baseUrl)
         .toLowerCase();
 
-    if (_isLocalDevelopmentHost(host)) {
+    if (_isLocalDevelopmentHost(host) || host != 'api.wassel.net.ly') {
       throw StateError(
-        'Release builds must use a reachable remote API endpoint. '
+        'Release builds must use the dedicated Wassel Delivery API endpoint. '
         'Received WASSEL_API_BASE_URL=$baseUrl.',
       );
     }

@@ -43,12 +43,13 @@ Create the following in Firebase:
 4. Record the Firebase Android App ID for each app. These are the values shaped like `<FIREBASE_ANDROID_APP_ID>` and not the package name.
 5. Create an internal tester group for Android distribution, for example `<ANDROID_INTERNAL_TESTERS_GROUP>`.
 6. Add your internal tester email addresses to that tester group.
-7. Create a service account with Firebase App Distribution access for this project.
-8. Export the service account JSON and store it only in GitHub Secrets.
+7. Create a Google Cloud service account with Firebase App Distribution access for this project.
+8. Configure Workload Identity Federation from GitHub Actions to that service account.
 
 Recommended Firebase secret placeholders:
 
-- `<FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT_JSON>`
+- `<GCP_WORKLOAD_IDENTITY_PROVIDER>`
+- `<GCP_SERVICE_ACCOUNT_EMAIL>`
 - `<FIREBASE_APP_ID_CUSTOMER_ANDROID>`
 - `<FIREBASE_APP_ID_DRIVER_ANDROID>`
 - `<FIREBASE_APP_ID_ADMIN_MOBILE_ANDROID>`
@@ -60,7 +61,8 @@ Create these repository secrets in GitHub for the Wassel-Delivery repository:
 
 | Secret name | Purpose |
 | --- | --- |
-| `FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT_JSON` | Full Firebase service account JSON for App Distribution uploads |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Workload Identity Provider resource name used by GitHub OIDC |
+| `GCP_SERVICE_ACCOUNT_EMAIL` | Service account email to impersonate for Firebase uploads |
 | `FIREBASE_APP_ID_CUSTOMER_ANDROID` | Firebase Android App ID for the customer app |
 | `FIREBASE_APP_ID_DRIVER_ANDROID` | Firebase Android App ID for the driver app |
 | `FIREBASE_APP_ID_ADMIN_MOBILE_ANDROID` | Firebase Android App ID for the admin mobile app |
@@ -73,7 +75,7 @@ Create these repository secrets in GitHub for the Wassel-Delivery repository:
 Notes:
 
 - Keep all values out of git.
-- The workflow writes temporary CI-only files from secrets at runtime.
+- The workflow authenticates to Google Cloud using GitHub OIDC and Workload Identity Federation.
 - The repository ignores generated `key.properties` and keystore files.
 
 ## GitHub Actions Workflow

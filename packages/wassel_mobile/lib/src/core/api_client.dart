@@ -57,7 +57,7 @@ class WasselApiClient extends ChangeNotifier {
     required String password,
   }) async {
     final payload = await postJson(
-      '/auth/login',
+      environment.loginPath,
       authenticated: false,
       allowRefresh: false,
       body: {'email': email.trim(), 'password': password},
@@ -70,11 +70,12 @@ class WasselApiClient extends ChangeNotifier {
 
   Future<void> logout() async {
     final refreshToken = _currentSession?.refreshToken;
+    final logoutPath = environment.logoutPath;
 
-    if (_currentSession != null) {
+    if (_currentSession != null && logoutPath != null) {
       try {
         await postJson(
-          '/auth/logout',
+          logoutPath,
           allowRefresh: false,
           body: refreshToken == null
               ? const <String, dynamic>{}
@@ -210,9 +211,10 @@ class WasselApiClient extends ChangeNotifier {
       return _refreshCompleter!.future;
     }
 
+    final refreshPath = environment.refreshPath;
     final refreshToken = _currentSession?.refreshToken;
 
-    if (refreshToken == null) {
+    if (refreshToken == null || refreshPath == null) {
       await clearSession();
       return null;
     }
@@ -221,7 +223,7 @@ class WasselApiClient extends ChangeNotifier {
 
     try {
       final payload = await postJson(
-        '/auth/refresh',
+        refreshPath,
         authenticated: false,
         allowRefresh: false,
         body: {'refreshToken': refreshToken},

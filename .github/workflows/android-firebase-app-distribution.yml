@@ -63,24 +63,35 @@ jobs:
         run: |
           set -euo pipefail
 
+          api_base_url="https://api.wassel.org.ly/api"
+
           case "${{ inputs.app }}" in
             customer-app)
               app_dir="apps/customer-app"
               app_name="Customer App"
               package_name="com.wassel.customer_app"
               firebase_app_id="$CUSTOMER_FIREBASE_APP_ID"
+              login_path="/customer/login"
+              refresh_path="/customer/refresh"
+              logout_path="/customer/logout"
               ;;
             driver-app)
               app_dir="apps/driver-app"
               app_name="Driver App"
               package_name="com.wassel.driver_app"
               firebase_app_id="$DRIVER_FIREBASE_APP_ID"
+              login_path="/agent/login"
+              refresh_path=""
+              logout_path=""
               ;;
             admin-mobile)
               app_dir="apps/admin-mobile"
               app_name="Admin Mobile"
               package_name="com.wassel.admin_mobile"
               firebase_app_id="$ADMIN_FIREBASE_APP_ID"
+              login_path="/admin/login"
+              refresh_path=""
+              logout_path=""
               ;;
             *)
               echo "Unsupported app selection: ${{ inputs.app }}" >&2
@@ -103,6 +114,17 @@ jobs:
             exit 1
           fi
 
+          api_host="$(printf '%s' "$api_base_url" | sed -E 's#^[A-Za-z]+://([^/:?#]+).*#\1#' | tr '[:upper:]' '[:lower:]')"
+          if [[ -z "$api_host" ]]; then
+            echo "Unable to parse API host from API base URL: $api_base_url" >&2
+            exit 1
+          fi
+
+          if [[ "$api_host" == "localhost" || "$api_host" == "::1" || "$api_host" == 127.* || "$api_host" == 10.* || "$api_host" == 192.168.* || "$api_host" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\. ]]; then
+            echo "Distribution builds must use a reachable remote API endpoint. Refusing API base URL: $api_base_url" >&2
+            exit 1
+          fi
+
           artifact_name="${{ inputs.app }}-android-release-${GITHUB_SHA::7}"
           artifact_path="$app_dir/build/app/outputs/flutter-apk/app-release.apk"
 
@@ -112,6 +134,10 @@ jobs:
             echo "PACKAGE_NAME=$package_name"
             echo "FIREBASE_APP_ID=$firebase_app_id"
             echo "TESTER_GROUPS=$tester_groups"
+            echo "API_BASE_URL=$api_base_url"
+            echo "LOGIN_PATH=$login_path"
+            echo "REFRESH_PATH=$refresh_path"
+            echo "LOGOUT_PATH=$logout_path"
             echo "ARTIFACT_NAME=$artifact_name"
             echo "ARTIFACT_PATH=$artifact_path"
           } >> "$GITHUB_ENV"
@@ -122,6 +148,10 @@ jobs:
             echo "package_name=$package_name"
             echo "firebase_app_id=$firebase_app_id"
             echo "tester_groups=$tester_groups"
+            echo "api_base_url=$api_base_url"
+            echo "login_path=$login_path"
+            echo "refresh_path=$refresh_path"
+            echo "logout_path=$logout_path"
             echo "artifact_name=$artifact_name"
             echo "artifact_path=$artifact_path"
           } >> "$GITHUB_OUTPUT"
@@ -195,7 +225,18 @@ jobs:
 
       - name: Build Android release APK
         working-directory: ${{ steps.config.outputs.app_dir }}
-        run: flutter build apk --release
+        env:
+          WASSEL_API_BASE_URL: ${{ steps.config.outputs.api_base_url }}
+          WASSEL_LOGIN_PATH: ${{ steps.config.outputs.login_path }}
+          WASSEL_REFRESH_PATH: ${{ steps.config.outputs.refresh_path }}
+          WASSEL_LOGOUT_PATH: ${{ steps.config.outputs.logout_path }}
+        run: |
+          set -euo pipefail
+          flutter build apk --release \
+            --dart-define=WASSEL_API_BASE_URL="$WASSEL_API_BASE_URL" \
+            --dart-define=WASSEL_LOGIN_PATH="$WASSEL_LOGIN_PATH" \
+            --dart-define=WASSEL_REFRESH_PATH="$WASSEL_REFRESH_PATH" \
+            --dart-define=WASSEL_LOGOUT_PATH="$WASSEL_LOGOUT_PATH"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -226,6 +267,10 @@ jobs:
             echo "- Commit: ${GITHUB_SHA}"
             echo "- Artifact: $ARTIFACT_NAME"
             echo "- Artifact path: $ARTIFACT_PATH"
+            echo "- API base URL: $API_BASE_URL"
+            echo "- Login path: $LOGIN_PATH"
+            echo "- Refresh path: ${REFRESH_PATH:-<disabled>}"
+            echo "- Logout path: ${LOGOUT_PATH:-<disabled>}"
             echo "- Tester groups: $TESTER_GROUPS"
             echo "- Firebase upload: completed by Firebase CLI step"
           } >> "$GITHUB_STEP_SUMMARY"

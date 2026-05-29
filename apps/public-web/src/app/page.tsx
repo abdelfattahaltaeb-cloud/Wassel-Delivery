@@ -6,7 +6,7 @@ const surfaces = [
   },
   {
     label: 'واجهة البرمجة',
-    href: 'https://api.wassel.net.ly/health',
+    href: 'https://api.wassel.net.ly/api/health',
     description: 'نقطة الصحة العامة للـ API المستقل الخاص بـ Wassel Delivery.'
   }
 ];
@@ -14,7 +14,7 @@ const surfaces = [
 const highlights = [
   {
     title: 'بنية مستقلة بالكامل',
-    body: 'هذا النطاق مخصص فقط لـ Wassel Delivery ولا يعتمد على أي خدمة أو توجيه من Wassel Logistics.'
+    body: 'هذا النطاق مخصص فقط لـ Wassel Delivery ولا يعتمد على أي خدمة أو توجيه خارج هذا المشروع.'
   },
   {
     title: 'سطح API مخصص',
@@ -49,7 +49,7 @@ export default function HomePage() {
               <a className="pill pill-primary" href="https://admin.wassel.net.ly">
                 دخول الإدارة
               </a>
-              <a className="pill pill-secondary" href="https://api.wassel.net.ly/build-info">
+              <a className="pill pill-secondary" href="https://api.wassel.net.ly/api/build-info">
                 معلومات الإصدار
               </a>
             </div>

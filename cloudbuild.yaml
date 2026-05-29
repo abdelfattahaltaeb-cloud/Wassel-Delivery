@@ -1,0 +1,11 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/backend-api:${_TAG}', '-f', 'apps/backend-api/Dockerfile', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/admin-web:${_TAG}', '-f', 'apps/admin-web/Dockerfile', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/public-web:${_TAG}', '-f', 'apps/public-web/Dockerfile', '.']
+images:
+- 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/backend-api:${_TAG}'
+- 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/admin-web:${_TAG}'
+- 'europe-west1-docker.pkg.dev/wassel-delivery-27d8c/delivery-containers/public-web:${_TAG}'

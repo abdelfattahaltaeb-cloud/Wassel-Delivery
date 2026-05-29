@@ -8,6 +8,7 @@ import { randomBytes } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.interface';
+import { safeUserSelect } from '../../common/data/safe-user-select';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import type { CancelOrderDto } from './dto/cancel-order.dto';
 import type { CreateOrderDto } from './dto/create-order.dto';
@@ -30,12 +31,16 @@ const orderDetailInclude = {
   merchant: true,
   customer: {
     include: {
-      user: true
+      user: {
+        select: safeUserSelect
+      }
     }
   },
   assignedDriver: {
     include: {
-      user: true,
+      user: {
+        select: safeUserSelect
+      },
       vehicle: true
     }
   },
@@ -52,10 +57,14 @@ const orderDetailInclude = {
       assignedAt: 'desc'
     },
     include: {
-      assignedByUser: true,
+      assignedByUser: {
+        select: safeUserSelect
+      },
       driver: {
         include: {
-          user: true,
+          user: {
+            select: safeUserSelect
+          },
           vehicle: true
         }
       }
@@ -66,10 +75,14 @@ const orderDetailInclude = {
       createdAt: 'asc'
     },
     include: {
-      actorUser: true,
+      actorUser: {
+        select: safeUserSelect
+      },
       actorDriver: {
         include: {
-          user: true
+          user: {
+            select: safeUserSelect
+          }
         }
       }
     }
@@ -106,7 +119,9 @@ export class OrdersService {
         merchant: true,
         assignedDriver: {
           include: {
-            user: true
+            user: {
+              select: safeUserSelect
+            }
           }
         },
         stops: {

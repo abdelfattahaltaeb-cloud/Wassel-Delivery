@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { safeUserSelect } from '../../common/data/safe-user-select';
 import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
@@ -12,7 +13,9 @@ export class DriversService {
         createdAt: 'desc'
       },
       include: {
-        user: true,
+        user: {
+          select: safeUserSelect
+        },
         vehicle: true,
         availabilitySnapshots: {
           orderBy: {

@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.interface';
+import { safeUserSelect } from '../../common/data/safe-user-select';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import type { CreateDriverLocationDto } from './dto/create-driver-location.dto';
 import { TrackingGateway } from './tracking.gateway';
@@ -26,7 +27,9 @@ export class TrackingService {
       include: {
         driver: {
           include: {
-            user: true
+            user: {
+              select: safeUserSelect
+            }
           }
         },
         order: true
@@ -47,10 +50,14 @@ export class TrackingService {
         statusHistory: {
           orderBy: { createdAt: 'asc' },
           include: {
-            actorUser: true,
+            actorUser: {
+              select: safeUserSelect
+            },
             actorDriver: {
               include: {
-                user: true
+                user: {
+                  select: safeUserSelect
+                }
               }
             }
           }
@@ -62,7 +69,9 @@ export class TrackingService {
         proofOfDelivery: true,
         assignedDriver: {
           include: {
-            user: true
+            user: {
+              select: safeUserSelect
+            }
           }
         }
       }

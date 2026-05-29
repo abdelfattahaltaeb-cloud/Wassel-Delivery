@@ -34,6 +34,7 @@ test('orders, dispatch, tracking, and dashboard flows work end-to-end', async (t
 
   assert.equal(ordersResponse.status, 200);
   assert.equal(ordersResponse.body.orders.length, 3);
+  assertNoPasswordHash(ordersResponse.body);
 
   const deliveryOrderResponse = await harness.http
     .post('/v1/orders')
@@ -51,6 +52,7 @@ test('orders, dispatch, tracking, and dashboard flows work end-to-end', async (t
 
   assert.equal(manualAssignResponse.status, 201);
   assert.equal(manualAssignResponse.body.order.status, 'ASSIGNED');
+  assertNoPasswordHash(manualAssignResponse.body);
 
   const driverAcceptResponse = await harness.http
     .post(`/v1/orders/${deliveryOrderId}/driver-acceptance`)
@@ -147,4 +149,32 @@ test('orders, dispatch, tracking, and dashboard flows work end-to-end', async (t
   assert.equal(publicTrackingResponse.status, 200);
   assert.equal(publicTrackingResponse.body.tracking.currentStatus, 'IN_TRANSIT');
   assert.ok(publicTrackingResponse.body.tracking.timeline.length >= 1);
+  assertNoPasswordHash(publicTrackingResponse.body);
+
+  const trackingResponse = await harness.http
+    .get(`/v1/tracking/orders/${deliveryOrderId}/timeline`)
+    .set(getAuthHeader(adminSession.accessToken));
+
+  assert.equal(trackingResponse.status, 200);
+  assert.equal(trackingResponse.body.tracking.orderId, deliveryOrderId);
+  assertNoPasswordHash(trackingResponse.body);
 });
+
+function assertNoPasswordHash(value: unknown) {
+  if (!value || typeof value !== 'object') {
+    return;
+  }
+
+  assert.equal(Object.hasOwn(value, 'passwordHash'), false);
+
+  for (const childValue of Object.values(value)) {
+    if (Array.isArray(childValue)) {
+      for (const item of childValue) {
+        assertNoPasswordHash(item);
+      }
+      continue;
+    }
+
+    assertNoPasswordHash(childValue);
+  }
+}

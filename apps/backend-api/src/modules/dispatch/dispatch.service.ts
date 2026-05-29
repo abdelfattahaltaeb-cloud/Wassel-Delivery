@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.interface';
+import { safeUserSelect } from '../../common/data/safe-user-select';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 import type { ManualAssignDriverDto } from '../orders/dto/manual-assign-driver.dto';
@@ -29,7 +30,9 @@ export class DispatchService {
         serviceArea: true,
         assignedDriver: {
           include: {
-            user: true
+            user: {
+              select: safeUserSelect
+            }
           }
         }
       }

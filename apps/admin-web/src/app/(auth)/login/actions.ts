@@ -18,16 +18,18 @@ export async function loginAction(formData: FormData) {
     redirect('/login?error=missing');
   }
 
+  let response: LoginResponse;
+
   try {
-    const response = await apiFetch<LoginResponse>('/auth/login', {
+    response = await apiFetch<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-
-    await storeSession(response);
-    redirect('/dashboard');
   } catch {
     await clearSession();
     redirect('/login?error=invalid');
   }
+
+  await storeSession(response);
+  redirect('/dashboard');
 }

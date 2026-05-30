@@ -39,7 +39,7 @@ class _DriverAppState extends State<DriverApp> {
     const descriptor = MobileAppDescriptor(
       appName: 'تطبيق السائقين',
       appTagline: 'أساس تشغيلي مستقل للمهام، التوصيل، والدخل',
-      environmentLabel: 'Driver live API',
+      environmentLabel: '',
       seedColor: Color(0xFF1C4E80),
     );
 

@@ -39,7 +39,7 @@ class _CustomerAppState extends State<CustomerApp> {
     const descriptor = MobileAppDescriptor(
       appName: 'تطبيق العملاء',
       appTagline: 'أساس جديد لتجربة الطلب والتتبع والدعم',
-      environmentLabel: 'Customer live API',
+      environmentLabel: '',
       seedColor: Color(0xFF0E7C66),
     );
 

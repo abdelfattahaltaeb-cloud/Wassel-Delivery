@@ -1,6 +1,7 @@
 import { apiFetch } from '../../../lib/api';
 import { getAccessTokenOrRedirect } from '../../../lib/auth';
 import { formatOrderStatus, getStatusTone } from '../../../lib/format';
+import { assignDriverAction } from './actions';
 
 type DispatchResponse = {
   jobs: Array<{
@@ -14,9 +15,22 @@ type DispatchResponse = {
   }>;
 };
 
+type DriversResponse = {
+  drivers: Array<{
+    id: string;
+    status: string;
+    name: string;
+    activeAssignments: number;
+  }>;
+};
+
 export default async function DispatchPage() {
   const accessToken = await getAccessTokenOrRedirect();
-  const response = await apiFetch<DispatchResponse>('/dispatch', { accessToken });
+  const [response, driversResponse] = await Promise.all([
+    apiFetch<DispatchResponse>('/dispatch', { accessToken }),
+    apiFetch<DriversResponse>('/drivers', { accessToken })
+  ]);
+  const assignableDrivers = driversResponse.drivers.filter((driver) => driver.status !== 'BLOCKED');
 
   return (
     <section className="section-stack">
@@ -40,13 +54,14 @@ export default async function DispatchPage() {
       </header>
 
       <article className="page-card table-card">
-        <div className="data-table">
+        <div className="data-table dispatch-table">
           <div className="data-table-header">
             <span>الطلب</span>
             <span>التاجر</span>
             <span>الموقع</span>
             <span>السائق الحالي</span>
             <span>الحالة</span>
+            <span>تعيين</span>
           </div>
           {response.jobs.map((job) => (
             <div className="data-table-row" key={job.id}>
@@ -55,6 +70,19 @@ export default async function DispatchPage() {
               <span>{job.city?.name ?? 'بدون مدينة'} · {job.serviceArea?.name ?? 'بدون منطقة خدمة'}</span>
               <span>{job.assignedDriver?.user ? `${job.assignedDriver.user.firstName} ${job.assignedDriver.user.lastName}` : 'غير مسند'}</span>
               <span className={`badge badge-${getStatusTone(job.status)}`}>{formatOrderStatus(job.status)}</span>
+              <form className="inline-form" action={assignDriverAction}>
+                <input type="hidden" name="orderId" value={job.id} />
+                <select className="compact-select" name="driverId" defaultValue="">
+                  <option value="" disabled>اختر سائقاً</option>
+                  {assignableDrivers.map((driver) => (
+                    <option key={driver.id} value={driver.id}>
+                      {driver.name} ({driver.activeAssignments})
+                    </option>
+                  ))}
+                </select>
+                <input type="hidden" name="note" value="تعيين من لوحة التوزيع" />
+                <button className="secondary-link inline-link action-link" type="submit">تعيين</button>
+              </form>
             </div>
           ))}
         </div>

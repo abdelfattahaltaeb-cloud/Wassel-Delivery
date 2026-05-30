@@ -39,7 +39,7 @@ class _AdminMobileAppState extends State<AdminMobileApp> {
     const descriptor = MobileAppDescriptor(
       appName: 'تطبيق الإدارة المتنقل',
       appTagline: 'أساس إشرافي مستقل للعمليات الميدانية والاعتمادات',
-      environmentLabel: 'Admin mobile live API',
+      environmentLabel: '',
       seedColor: Color(0xFF8E5A2B),
     );
 

@@ -4,6 +4,7 @@ export 'src/core/api_exception.dart';
 export 'src/models/auth_models.dart';
 export 'src/models/operations_models.dart';
 export 'src/models/order_models.dart';
+export 'src/presentation/arabic_formatters.dart';
 export 'src/repositories/auth_repository.dart';
 export 'src/repositories/operations_repository.dart';
 export 'src/repositories/orders_repository.dart';

@@ -57,7 +57,7 @@ export default async function DriversPage() {
               </span>
               <span className={`badge badge-${getStatusTone(driver.status)}`}>{formatDriverStatus(driver.status)}</span>
               <span>{driver.vehicle ? `${driver.vehicle.make ?? ''} ${driver.vehicle.model ?? ''} · ${driver.vehicle.plateNumber}` : 'غير محددة'}</span>
-              <span>{driver.latestAvailability?.serviceArea?.name ?? driver.latestAvailability?.status ?? 'غير متاح'}</span>
+              <span>{driver.latestAvailability?.serviceArea?.name ?? (driver.latestAvailability?.status ? formatDriverStatus(driver.latestAvailability.status) : 'غير متاح')}</span>
               <span>{driver.activeAssignments}</span>
             </div>
           ))}

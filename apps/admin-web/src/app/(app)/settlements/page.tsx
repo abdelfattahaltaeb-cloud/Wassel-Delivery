@@ -1,6 +1,6 @@
 import { apiFetch } from '../../../lib/api';
 import { getAccessTokenOrRedirect } from '../../../lib/auth';
-import { formatCurrency, formatSettlementStatus, getStatusTone } from '../../../lib/format';
+import { formatCurrency, formatLedgerCode, formatSettlementStatus, getStatusTone } from '../../../lib/format';
 
 type SettlementsResponse = {
   settlements: Array<{
@@ -55,10 +55,10 @@ export default async function SettlementsPage() {
             <div className="data-table-row" key={settlement.id}>
               <span>{settlement.order.referenceCode}</span>
               <span>{settlement.order.merchant?.name ?? 'بدون تاجر'}</span>
-              <span>{settlement.direction}</span>
+              <span>{settlement.direction === 'CREDIT' ? 'دائن' : 'مدين'}</span>
               <span className={`badge badge-${getStatusTone(settlement.status)}`}>{formatSettlementStatus(settlement.status)}</span>
               <span>{formatCurrency(settlement.amount)}</span>
-              <span>{settlement.ledgerCode}</span>
+              <span>{formatLedgerCode(settlement.ledgerCode)}</span>
             </div>
           ))}
         </div>

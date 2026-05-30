@@ -6,10 +6,12 @@ import { getAccessTokenOrRedirect } from '../../../../lib/auth';
 import {
   formatCurrency,
   formatDateTime,
+  formatLedgerCode,
   formatOrderStatus,
   formatSettlementStatus,
   getStatusTone
 } from '../../../../lib/format';
+import { updateOrderStatusAction } from './actions';
 
 type OrderResponse = {
   order: {
@@ -113,6 +115,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               <span className="metric-value metric-value-compact">{formatCurrency(order.totalAmount)}</span>
               <span className="metric-label">قيمة الطلب</span>
             </article>
+            <article className="metric-card">
+              <span className="metric-value metric-value-compact">{formatCurrency(order.codAmount)}</span>
+              <span className="metric-label">تحصيل نقدي</span>
+            </article>
           </div>
         </header>
 
@@ -128,7 +134,45 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               <div><dt>منطقة الخدمة</dt><dd>{order.serviceArea?.name ?? 'غير محدد'}</dd></div>
               <div><dt>رمز التتبع العام</dt><dd>{order.publicTrackingCode}</dd></div>
               <div><dt>مبلغ COD</dt><dd>{formatCurrency(order.codAmount)}</dd></div>
+              <div><dt>رسوم التوصيل</dt><dd>{formatCurrency(Number(order.totalAmount) - Number(order.codAmount))}</dd></div>
             </dl>
+          </article>
+
+          <article className="page-card detail-card">
+            <h3>إجراءات الطلب</h3>
+            <p className="meta-copy">أزرار تشغيلية مرتبطة بنقاط التحويل المتاحة في الواجهة الخلفية الحالية.</p>
+            <form className="action-stack" action={updateOrderStatusAction}>
+              <input type="hidden" name="orderId" value={order.id} />
+              <input name="note" className="input" placeholder="ملاحظة اختيارية" />
+              <input name="failureReason" className="input" placeholder="سبب الفشل عند الحاجة" />
+              <div className="button-row">
+                {order.status === 'ASSIGNED' ? (
+                  <button className="submit-button compact-button" name="action" value="driver-acceptance">
+                    قبل السائق الطلب
+                  </button>
+                ) : null}
+                {order.status === 'DRIVER_ACCEPTED' ? (
+                  <button className="submit-button compact-button" name="action" value="pickup">
+                    تم الاستلام
+                  </button>
+                ) : null}
+                {order.status === 'PICKED_UP' ? (
+                  <button className="submit-button compact-button" name="action" value="in-transit">
+                    في الطريق
+                  </button>
+                ) : null}
+                {order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT' ? (
+                  <>
+                    <button className="submit-button compact-button" name="action" value="deliver">
+                      تم التسليم
+                    </button>
+                    <button className="secondary-link inline-link action-link" name="action" value="fail-delivery">
+                      فشل التسليم
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </form>
           </article>
 
           <article className="page-card detail-card">
@@ -140,7 +184,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                   <div>
                     <strong>{stop.label}</strong>
                     <p>{stop.addressLine}</p>
-                    <p className="meta-copy">{stop.type} · التسلسل {stop.sequence}</p>
+                    <p className="meta-copy">{stop.type === 'PICKUP' ? 'استلام' : 'تسليم'} · التسلسل {stop.sequence}</p>
                   </div>
                 </div>
               ))}
@@ -175,7 +219,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             <h3>إثبات التسليم والتتبع</h3>
             <p className="meta-copy">آخر مواقع السائق وإثبات التسليم المرتبط بالطلب.</p>
             <dl className="details-list compact-details">
-              <div><dt>حالة POD</dt><dd>{order.proofOfDelivery?.status ?? 'PENDING'}</dd></div>
+              <div><dt>حالة POD</dt><dd>{formatOrderStatus(order.proofOfDelivery?.status ?? 'PENDING')}</dd></div>
               <div><dt>المستلم</dt><dd>{order.proofOfDelivery?.recipientName ?? 'غير متاح'}</dd></div>
               <div><dt>وقت التسليم</dt><dd>{formatDateTime(order.proofOfDelivery?.deliveredAt)}</dd></div>
               <div><dt>OTP</dt><dd>{order.proofOfDelivery?.otpCode ?? 'غير متاح'}</dd></div>
@@ -204,7 +248,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                   <span>{settlement.direction}</span>
                   <span className={`badge badge-${getStatusTone(settlement.status)}`}>{formatSettlementStatus(settlement.status)}</span>
                   <span>{formatCurrency(settlement.amount)}</span>
-                  <span>{settlement.ledgerCode}</span>
+                  <span>{formatLedgerCode(settlement.ledgerCode)}</span>
                 </div>
               ))}
             </div>

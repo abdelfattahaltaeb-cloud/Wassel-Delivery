@@ -344,8 +344,7 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
       children: [
         _buildHeroCard(
           title: 'إنشاء طلب جديد',
-          subtitle:
-              'يتم ربط الطلب مباشرة مع الواجهة الحية ويُسند تلقائياً لحساب العميل الحالي.',
+          subtitle: 'أدخل بيانات الاستلام والتسليم والمبلغ المطلوب تحصيله.',
         ),
         const SizedBox(height: 16),
         Card(
@@ -357,6 +356,10 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
                 Text(
                   'معلومات الطلب',
                   style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'سيظهر رمز التتبع مباشرة بعد إنشاء الطلب ويمكن مشاركته مع المستلم.',
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -435,8 +438,7 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
       children: [
         _buildHeroCard(
           title: 'التتبع العام والخاص',
-          subtitle:
-              'اعرض خط سير الطلب عبر رمز التتبع العام أو من خلال جلسة العميل الحالية.',
+          subtitle: 'تابع آخر حالة للطلب ورمز التتبع والخط الزمني للتحديثات.',
         ),
         const SizedBox(height: 16),
         Card(
@@ -463,10 +465,9 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
                 ),
                 if (_publicTracking != null) ...[
                   const SizedBox(height: 12),
-                  Text('الحالة الحالية: ${_publicTracking!.currentStatus}'),
-                  Text(
-                    'عدد تحديثات الخط الزمني: ${_publicTracking!.timeline.length}',
-                  ),
+                  _buildTrackingSummary(_publicTracking!),
+                  const SizedBox(height: 12),
+                  _buildTimeline(_publicTracking!.timeline),
                 ],
               ],
             ),
@@ -515,10 +516,13 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
-                      Text('الحالة: ${tracking.currentStatus}'),
+                      Text(
+                        'الحالة: ${formatArabicOrderStatus(tracking.currentStatus)}',
+                      ),
                       Text('التتبع العام: ${tracking.publicTrackingCode}'),
-                      Text('التحديثات: ${tracking.timeline.length}'),
                       Text('آخر المواقع: ${tracking.locations.length}'),
+                      const SizedBox(height: 12),
+                      _buildTimeline(tracking.timeline),
                     ],
                   ),
                 ),
@@ -565,14 +569,39 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                      Chip(label: Text(order.status)),
+                      Chip(label: Text(formatArabicOrderStatus(order.status))),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('القيمة: ${order.totalAmount.toStringAsFixed(2)} د.ل'),
+                  Text('القيمة: ${formatArabicCurrency(order.totalAmount)}'),
+                  Text(
+                    'التحصيل النقدي: ${formatArabicCurrency(order.codAmount)}',
+                  ),
                   Text('رمز التتبع: ${order.publicTrackingCode}'),
-                  Text('إثبات التسليم: ${order.proofOfDeliveryStatus}'),
+                  Text(
+                    'إثبات التسليم: ${formatArabicOrderStatus(order.proofOfDeliveryStatus)}',
+                  ),
+                  Text('آخر تحديث: ${_latestUpdateText(order.timeline)}'),
                   if (order.notes.isNotEmpty) Text('ملاحظات: ${order.notes}'),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            _showMessage('سيتم ربط الدعم في المرحلة التالية.'),
+                        icon: const Icon(Icons.support_agent_rounded),
+                        label: const Text('الدعم'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            _showMessage('سيتم ربط واتساب في المرحلة التالية.'),
+                        icon: const Icon(Icons.chat_rounded),
+                        label: const Text('واتساب'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -605,10 +634,27 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'تم إعداد الهيكل البرمجي للإشعارات، بينما سيأتي ربط القنوات الفعلية في المرحلة التالية.',
+                  'إدارة بيانات الحساب والدعم ستتوفر كخطوة تشغيلية لاحقة.',
                 ),
                 const SizedBox(height: 16),
-                Text('API: ${widget.environment.apiBaseUrl}'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showMessage('سيتم ربط مركز الدعم قريباً.'),
+                      icon: const Icon(Icons.support_agent_rounded),
+                      label: const Text('تواصل مع الدعم'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showMessage('سيتم ربط تحديث بيانات الحساب قريباً.'),
+                      icon: const Icon(Icons.manage_accounts_rounded),
+                      label: const Text('تحديث البيانات'),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _handleLogout,
@@ -640,14 +686,16 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.descriptor.environmentLabel,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w700,
+          if (widget.descriptor.environmentLabel.isNotEmpty) ...[
+            Text(
+              widget.descriptor.environmentLabel,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           Text(
             title,
             style: const TextStyle(
@@ -664,6 +712,68 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildTrackingSummary(TrackingSnapshot tracking) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'الحالة الحالية: ${formatArabicOrderStatus(tracking.currentStatus)}',
+        ),
+        Text('رمز التتبع: ${tracking.publicTrackingCode}'),
+        Text('آخر تحديث: ${_latestUpdateText(tracking.timeline)}'),
+      ],
+    );
+  }
+
+  Widget _buildTimeline(List<TrackingEntry> entries) {
+    if (entries.isEmpty) {
+      return const Text('لا توجد تحديثات بعد.');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('خط سير الطلب', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 5),
+                  child: Icon(Icons.radio_button_checked, size: 14),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(formatArabicOrderStatus(entry.status)),
+                      if (entry.note.isNotEmpty) Text(entry.note),
+                      Text(
+                        formatArabicDateTime(entry.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _latestUpdateText(List<TrackingEntry> entries) {
+    if (entries.isEmpty) {
+      return 'غير متاح';
+    }
+
+    return formatArabicDateTime(entries.last.createdAt);
   }
 }
 

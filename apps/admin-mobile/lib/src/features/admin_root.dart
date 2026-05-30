@@ -273,9 +273,27 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
           children: [
             _buildHeroCard(
               title: 'ملخص العمليات الحي',
-              subtitle: 'مؤشرات مباشرة من واجهة dashboard-summary.',
+              subtitle: 'مؤشرات مباشرة لمراقبة التشغيل اليومي من الهاتف.',
             ),
             const SizedBox(height: 16),
+            _buildStatCard(
+              'الطلبات الفاشلة',
+              summary.failedOrders.toString(),
+              Icons.error_rounded,
+            ),
+            const SizedBox(height: 12),
+            _buildStatCard(
+              'التسويات المعلقة',
+              formatArabicCurrency(summary.pendingSettlementAmount),
+              Icons.payments_rounded,
+            ),
+            const SizedBox(height: 12),
+            _buildStatCard(
+              'قيمة التحصيل',
+              formatArabicCurrency(summary.codVolume),
+              Icons.account_balance_wallet_rounded,
+            ),
+            const SizedBox(height: 12),
             _buildStatCard(
               'إجمالي الطلبات',
               summary.totalOrders.toString(),
@@ -351,7 +369,9 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(order.referenceCode),
-                        subtitle: Text('الحالة: ${order.status}'),
+                        subtitle: Text(
+                          '${formatArabicOrderStatus(order.status)} • ${formatArabicCurrency(order.codAmount)} تحصيل نقدي',
+                        ),
                         trailing: const Icon(Icons.chevron_left_rounded),
                         onTap: () {
                           setState(() {
@@ -400,13 +420,20 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text('المرجع: ${order.referenceCode}'),
-                          Text('الحالة: ${order.status}'),
+                          Text(
+                            'الحالة: ${formatArabicOrderStatus(order.status)}',
+                          ),
                           Text('التاجر: ${order.merchantName}'),
                           Text('السائق: ${order.driverName}'),
                           Text(
-                            'القيمة: ${order.totalAmount.toStringAsFixed(2)} د.ل',
+                            'القيمة: ${formatArabicCurrency(order.totalAmount)}',
                           ),
-                          Text('إثبات التسليم: ${order.proofOfDeliveryStatus}'),
+                          Text(
+                            'التحصيل النقدي: ${formatArabicCurrency(order.codAmount)}',
+                          ),
+                          Text(
+                            'إثبات التسليم: ${formatArabicOrderStatus(order.proofOfDeliveryStatus)}',
+                          ),
                         ],
                       ),
                     ),
@@ -452,7 +479,9 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             title: Text(job.referenceCode),
-                            subtitle: Text('الحالة: ${job.status}'),
+                            subtitle: Text(
+                              '${formatArabicOrderStatus(job.status)} • ${formatArabicCurrency(job.codAmount)}',
+                            ),
                           ),
                       ],
                     ),
@@ -472,7 +501,7 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
       children: [
         _buildHeroCard(
           title: 'السائقون والتجار',
-          subtitle: 'عرض حي لقوائم السائقين والتجار من الواجهات الإدارية.',
+          subtitle: 'عرض سريع لجاهزية السائقين ونشاط التجار.',
         ),
         const SizedBox(height: 16),
         FutureBuilder<List<DriverRecord>>(
@@ -514,7 +543,7 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text(driver.name),
                         subtitle: Text(
-                          '${driver.status} • ${driver.activeAssignments} مهام',
+                          '${formatArabicDriverStatus(driver.status)} • ${driver.activeAssignments} مهام',
                         ),
                       ),
                   ],
@@ -603,7 +632,7 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
             const SizedBox(height: 16),
             _buildStatCard(
               'إجمالي المعلّق',
-              totalPending.toStringAsFixed(2),
+              formatArabicCurrency(totalPending),
               Icons.payments_rounded,
             ),
             const SizedBox(height: 16),
@@ -621,11 +650,13 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                     for (final settlement in settlements.take(8))
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(settlement.ledgerCode),
-                        subtitle: Text(
-                          '${settlement.status} • ${settlement.description}',
+                        title: Text(
+                          formatArabicLedgerCode(settlement.ledgerCode),
                         ),
-                        trailing: Text(settlement.amount.toStringAsFixed(2)),
+                        subtitle: Text(
+                          '${formatArabicSettlementStatus(settlement.status)} • ${settlement.description}',
+                        ),
+                        trailing: Text(formatArabicCurrency(settlement.amount)),
                       ),
                   ],
                 ),
@@ -643,8 +674,6 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
-                    Text('API: ${widget.environment.apiBaseUrl}'),
-                    const SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: _handleLogout,
                       icon: const Icon(Icons.logout_rounded),
@@ -677,14 +706,16 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.descriptor.environmentLabel,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w700,
+          if (widget.descriptor.environmentLabel.isNotEmpty) ...[
+            Text(
+              widget.descriptor.environmentLabel,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           Text(
             title,
             style: const TextStyle(

@@ -10,14 +10,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ar-LY', {
 });
 
 const orderStatusLabels: Record<string, string> = {
-  CREATED: 'تم الإنشاء',
-  ASSIGNED: 'تم الإسناد',
-  DRIVER_ACCEPTED: 'قبول السائق',
+  CREATED: 'طلب جديد',
+  ASSIGNED: 'تم تعيين السائق',
+  DRIVER_ACCEPTED: 'قبل السائق الطلب',
   PICKED_UP: 'تم الاستلام',
-  IN_TRANSIT: 'قيد التوصيل',
+  IN_TRANSIT: 'في الطريق',
   DELIVERED: 'تم التسليم',
   FAILED_DELIVERY: 'فشل التسليم',
-  CANCELLED: 'ملغي'
+  CANCELLED: 'ملغي',
+  PENDING: 'معلق'
 };
 
 const driverStatusLabels: Record<string, string> = {
@@ -28,9 +29,13 @@ const driverStatusLabels: Record<string, string> = {
 };
 
 const settlementStatusLabels: Record<string, string> = {
-  PENDING: 'معلقة',
+  PENDING: 'معلق',
   POSTED: 'مرحلة',
   REVERSED: 'معكوسة'
+};
+
+const ledgerCodeLabels: Record<string, string> = {
+  COD_COLLECTION: 'تحصيل نقدي'
 };
 
 export function formatCurrency(value: number | string | null | undefined) {
@@ -56,6 +61,10 @@ export function formatDriverStatus(value: string) {
 
 export function formatSettlementStatus(value: string) {
   return settlementStatusLabels[value] ?? value;
+}
+
+export function formatLedgerCode(value: string) {
+  return ledgerCodeLabels[value] ?? value;
 }
 
 export function getStatusTone(value: string) {

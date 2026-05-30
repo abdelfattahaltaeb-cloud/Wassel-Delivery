@@ -48,6 +48,7 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
 
   int _selectedIndex = 0;
   String? _selectedOrderId;
+  String _selectedFailureReason = _failureReasons.first;
   bool _submitting = false;
 
   @override
@@ -326,60 +327,34 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
       );
     }
 
+    final active = orders
+        .where(
+          (order) => const {
+            'ASSIGNED',
+            'DRIVER_ACCEPTED',
+            'PICKED_UP',
+            'IN_TRANSIT',
+          }.contains(order.status),
+        )
+        .toList();
+    final completed = orders
+        .where((order) => order.status == 'DELIVERED')
+        .toList();
+    final failed = orders
+        .where((order) => order.status == 'FAILED_DELIVERY')
+        .toList();
+
     return RefreshIndicator(
       onRefresh: () async => _reloadOrders(),
-      child: ListView.separated(
+      child: ListView(
         padding: const EdgeInsets.all(20),
-        itemCount: orders.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final order = orders[index];
-
-          return Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () {
-                setState(() {
-                  _selectedOrderId = order.id;
-                  _selectedIndex = 1;
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            order.referenceCode,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        Chip(label: Text(order.status)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text('التاجر: ${order.merchantName}'),
-                    const SizedBox(height: 4),
-                    Text(
-                      'قيمة الطلب: ${order.totalAmount.toStringAsFixed(2)} د.ل',
-                    ),
-                    const SizedBox(height: 8),
-                    for (final stop in order.stops)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(
-                          '${stop.sequence}. ${stop.label} - ${stop.addressLine}',
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+        children: [
+          _buildTaskSection('مهام نشطة', active),
+          const SizedBox(height: 16),
+          _buildTaskSection('مهام مكتملة', completed),
+          const SizedBox(height: 16),
+          _buildTaskSection('مهام فاشلة', failed),
+        ],
       ),
     );
   }
@@ -407,7 +382,8 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
           children: [
             _buildHeroCard(
               title: order.referenceCode,
-              subtitle: 'الحالة الحالية: ${order.status}',
+              subtitle:
+                  'الحالة الحالية: ${formatArabicOrderStatus(order.status)}',
             ),
             const SizedBox(height: 16),
             Card(
@@ -423,8 +399,17 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
                     const SizedBox(height: 12),
                     Text('التاجر: ${order.merchantName}'),
                     Text('العميل: ${order.customerName}'),
+                    Text(
+                      'قيمة الطلب: ${formatArabicCurrency(order.totalAmount)}',
+                    ),
+                    Text(
+                      'التحصيل النقدي: ${formatArabicCurrency(order.codAmount)}',
+                    ),
                     Text('التتبع العام: ${order.publicTrackingCode}'),
-                    Text('إثبات التسليم: ${order.proofOfDeliveryStatus}'),
+                    Text(
+                      'إثبات التسليم: ${formatArabicOrderStatus(order.proofOfDeliveryStatus)}',
+                    ),
+                    Text('آخر تحديث: ${_latestUpdateText(order.timeline)}'),
                     if (order.notes.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text('ملاحظات: ${order.notes}'),
@@ -451,6 +436,8 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
                         labelText: 'ملاحظة التشغيل',
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    _buildContactButtons(order),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -547,6 +534,31 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
                         decoration: const InputDecoration(
                           labelText: 'سبب فشل التوصيل',
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedFailureReason,
+                        decoration: const InputDecoration(
+                          labelText: 'سبب سريع للفشل',
+                        ),
+                        items: _failureReasons
+                            .map(
+                              (reason) => DropdownMenuItem(
+                                value: reason,
+                                child: Text(reason),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) {
+                            return;
+                          }
+
+                          setState(() {
+                            _selectedFailureReason = value;
+                            _failureReasonController.text = value;
+                          });
+                        },
                       ),
                       const SizedBox(height: 12),
                       Wrap(
@@ -660,8 +672,7 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
       children: [
         _buildHeroCard(
           title: 'ملخص اليوم التشغيلي',
-          subtitle:
-              'الأرباح التفصيلية ما زالت تحتاج واجهة تسويات خاصة بالسائق.',
+          subtitle: 'نظرة سريعة على المهام النشطة والمنجزة والمتعثرة.',
         ),
         const SizedBox(height: 16),
         _buildStatCard(
@@ -707,7 +718,6 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                Text('API: ${widget.environment.apiBaseUrl}'),
                 Text('الأدوار: ${user?.roles.join(', ') ?? '-'}'),
                 Text('الصلاحيات: ${user?.permissions.length ?? 0}'),
                 const SizedBox(height: 16),
@@ -741,14 +751,16 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.descriptor.environmentLabel,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w700,
+          if (widget.descriptor.environmentLabel.isNotEmpty) ...[
+            Text(
+              widget.descriptor.environmentLabel,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           Text(
             title,
             style: const TextStyle(
@@ -776,6 +788,93 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
       ),
     );
   }
+
+  Widget _buildTaskSection(String title, List<OrderRecord> orders) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            if (orders.isEmpty)
+              const Text('لا توجد عناصر في هذه القائمة.')
+            else
+              for (final order in orders)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(order.referenceCode),
+                  subtitle: Text(
+                    '${formatArabicOrderStatus(order.status)} • ${formatArabicCurrency(order.codAmount)} تحصيل نقدي',
+                  ),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () {
+                    setState(() {
+                      _selectedOrderId = order.id;
+                      _selectedIndex = 1;
+                    });
+                  },
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactButtons(OrderRecord order) {
+    final phones = order.stops
+        .map((stop) => stop.contactPhone)
+        .whereType<String>()
+        .where((phone) => phone.isNotEmpty)
+        .toList();
+    final addresses = order.stops
+        .map((stop) => stop.addressLine)
+        .where((address) => address.isNotEmpty)
+        .toList();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        OutlinedButton.icon(
+          onPressed: phones.isEmpty
+              ? null
+              : () => _showMessage('سيتم ربط الاتصال الهاتفي: ${phones.first}'),
+          icon: const Icon(Icons.call_rounded),
+          label: const Text('اتصال'),
+        ),
+        OutlinedButton.icon(
+          onPressed: phones.isEmpty
+              ? null
+              : () => _showMessage('سيتم ربط واتساب: ${phones.first}'),
+          icon: const Icon(Icons.chat_rounded),
+          label: const Text('واتساب'),
+        ),
+        OutlinedButton.icon(
+          onPressed: addresses.isEmpty
+              ? null
+              : () => _showMessage('سيتم فتح الخريطة: ${addresses.first}'),
+          icon: const Icon(Icons.map_rounded),
+          label: const Text('الخريطة'),
+        ),
+      ],
+    );
+  }
+
+  String _latestUpdateText(List<TrackingEntry> entries) {
+    if (entries.isEmpty) {
+      return 'غير متاح';
+    }
+
+    return formatArabicDateTime(entries.last.createdAt);
+  }
 }
 
 const developmentSeedDriverEmail = 'driver@wassel-delivery.local';
+const _failureReasons = [
+  'تعذر الوصول إلى العميل',
+  'العنوان غير واضح',
+  'العميل رفض الاستلام',
+  'تعذر التحصيل النقدي',
+];

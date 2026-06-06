@@ -231,6 +231,10 @@ a {
   overflow: hidden;
 }
 
+.table-card {
+  overflow-x: auto;
+}
+
 .data-table,
 .mini-table {
   display: grid;
@@ -249,12 +253,35 @@ a {
 
 .orders-table .data-table-header,
 .orders-table .data-table-row {
-  grid-template-columns: 1.2fr 1fr 1fr 0.8fr 0.8fr 0.8fr 0.7fr;
+  grid-template-columns: 1.2fr 1.15fr 1fr 1fr 1fr 0.8fr 1fr 1.4fr 0.95fr 0.8fr 1fr 0.95fr 0.95fr 1.25fr 0.8fr;
 }
 
 .data-table:not(.orders-table) .data-table-header,
 .data-table:not(.orders-table) .data-table-row {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.operational-table {
+  min-width: 1180px;
+}
+
+.merchants-table .data-table-header,
+.merchants-table .data-table-row {
+  grid-template-columns: 0.7fr 1.2fr 0.9fr 0.9fr 1fr 1fr 0.8fr 1fr 0.75fr 0.75fr 1fr 1fr 0.9fr 1fr;
+}
+
+.drivers-table {
+  min-width: 1360px;
+}
+
+.drivers-table .data-table-header,
+.drivers-table .data-table-row {
+  grid-template-columns: 0.85fr 1.1fr 0.95fr 0.85fr 1.25fr 0.75fr 0.75fr 1fr 1.1fr 0.75fr 0.85fr 1fr 0.95fr 0.85fr 0.85fr 0.9fr;
+}
+
+.settlements-table .data-table-header,
+.settlements-table .data-table-row {
+  grid-template-columns: 1fr 1fr 1fr 0.75fr 0.75fr 0.85fr 1fr;
 }
 
 .dispatch-table .data-table-header,
@@ -284,6 +311,12 @@ a {
 .data-table-row small,
 .meta-copy {
   color: var(--muted);
+}
+
+.data-table-row > span,
+.mini-table-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .badge {
@@ -539,6 +572,93 @@ a {
   font: inherit;
 }
 
+.wide-select {
+  max-width: 100%;
+}
+
+.placeholder-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 1rem;
+  border-radius: 14px;
+  border: 1px dashed rgba(24, 33, 38, 0.22);
+  background: rgba(255, 255, 255, 0.44);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 33, 38, 0.1);
+  background: rgba(255, 255, 255, 0.58);
+  font-weight: 700;
+}
+
+.filter-chip-active {
+  border-color: rgba(32, 117, 103, 0.28);
+  background: rgba(32, 117, 103, 0.12);
+  color: var(--success);
+}
+
+.mobile-card-list {
+  display: none;
+}
+
+.record-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.record-card-header > span:not(.badge) {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.record-fields {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+}
+
+.record-fields div {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.42fr) 1fr;
+  gap: 0.75rem;
+}
+
+.record-fields dt {
+  color: var(--muted);
+}
+
+.record-fields dd {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mobile-record-card {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
 @media (max-width: 960px) {
   .app-shell,
   .login-layout,
@@ -563,5 +683,35 @@ a {
   .sidebar-card,
   .content-panel {
     min-height: auto;
+  }
+
+  .data-table.operational-table,
+  .data-table.settlements-table,
+  .data-table.merchants-table,
+  .data-table.drivers-table {
+    display: none;
+  }
+
+  .mobile-card-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .record-fields div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .app-shell,
+  .login-layout {
+    padding: 0.85rem;
+  }
+
+  .sidebar-card,
+  .content-panel,
+  .hero-card,
+  .page-card,
+  .metric-card {
+    border-radius: 18px;
   }
 }

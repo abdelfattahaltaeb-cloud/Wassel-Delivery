@@ -41,3 +41,27 @@ export async function updateOrderStatusAction(formData: FormData) {
   revalidatePath('/orders');
   revalidatePath('/dispatch');
 }
+
+export async function assignCourierAction(formData: FormData) {
+  const accessToken = await getAccessTokenOrRedirect();
+  const orderId = String(formData.get('orderId') ?? '');
+  const driverId = String(formData.get('driverId') ?? '');
+  const note = String(formData.get('note') ?? '').trim();
+
+  if (!orderId || !driverId) {
+    return;
+  }
+
+  await apiFetch(`/dispatch/orders/${orderId}/manual-assign`, {
+    method: 'POST',
+    accessToken,
+    body: JSON.stringify({
+      driverId,
+      note: note || 'تعيين مندوب من تفاصيل الطرد'
+    })
+  });
+
+  revalidatePath(`/orders/${orderId}`);
+  revalidatePath('/orders');
+  revalidatePath('/dispatch');
+}

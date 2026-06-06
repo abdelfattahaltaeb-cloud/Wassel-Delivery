@@ -25,6 +25,11 @@ export class MerchantsService {
         contactPhone: merchant.contactPhone,
         city: merchant.city.name,
         serviceArea: merchant.serviceArea?.name ?? null,
+        createdAt: merchant.createdAt,
+        updatedAt: merchant.updatedAt,
+        lastOrderCreatedAt: merchant.orders
+          .map((order) => order.createdAt)
+          .sort((left, right) => right.getTime() - left.getTime())[0] ?? null,
         ordersCount: merchant.orders.length
       }))
     };

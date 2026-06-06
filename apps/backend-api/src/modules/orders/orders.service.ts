@@ -117,6 +117,13 @@ export class OrdersService {
       },
       include: {
         merchant: true,
+        customer: {
+          include: {
+            user: {
+              select: safeUserSelect
+            }
+          }
+        },
         assignedDriver: {
           include: {
             user: {
@@ -124,9 +131,23 @@ export class OrdersService {
             }
           }
         },
+        city: true,
+        zone: true,
+        serviceArea: true,
         stops: {
           orderBy: {
             sequence: 'asc'
+          }
+        },
+        statusHistory: {
+          orderBy: {
+            createdAt: 'asc'
+          },
+          take: 4
+        },
+        settlements: {
+          select: {
+            status: true
           }
         },
         proofOfDelivery: true

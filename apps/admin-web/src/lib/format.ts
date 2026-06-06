@@ -17,6 +17,7 @@ const orderStatusLabels: Record<string, string> = {
   IN_TRANSIT: 'في الطريق',
   DELIVERED: 'تم التسليم',
   FAILED_DELIVERY: 'فشل التسليم',
+  FAILED: 'فشل',
   CANCELLED: 'ملغي',
   PENDING: 'معلق'
 };
@@ -52,19 +53,19 @@ export function formatDateTime(value: string | Date | null | undefined) {
 }
 
 export function formatOrderStatus(value: string) {
-  return orderStatusLabels[value] ?? value;
+  return orderStatusLabels[value] ?? 'حالة غير مصنفة';
 }
 
 export function formatDriverStatus(value: string) {
-  return driverStatusLabels[value] ?? value;
+  return driverStatusLabels[value] ?? 'حالة غير مصنفة';
 }
 
 export function formatSettlementStatus(value: string) {
-  return settlementStatusLabels[value] ?? value;
+  return settlementStatusLabels[value] ?? 'حالة غير مصنفة';
 }
 
 export function formatLedgerCode(value: string) {
-  return ledgerCodeLabels[value] ?? value;
+  return ledgerCodeLabels[value] ?? 'قيد تشغيلي';
 }
 
 export function getStatusTone(value: string) {

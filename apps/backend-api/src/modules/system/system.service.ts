@@ -45,6 +45,9 @@ export class SystemService {
       failedOrders,
       availableDrivers,
       busyDrivers,
+      totalUsers,
+      totalDrivers,
+      totalCustomers,
       merchants,
       pendingSettlements,
       codVolume
@@ -61,6 +64,9 @@ export class SystemService {
       this.prismaService.order.count({ where: { status: 'FAILED_DELIVERY' } }),
       this.prismaService.driver.count({ where: { status: 'AVAILABLE' } }),
       this.prismaService.driver.count({ where: { status: 'BUSY' } }),
+      this.prismaService.user.count(),
+      this.prismaService.driver.count(),
+      this.prismaService.customer.count(),
       this.prismaService.merchant.count(),
       this.prismaService.settlement.aggregate({
         where: { status: 'PENDING' },
@@ -79,8 +85,14 @@ export class SystemService {
         failed: failedOrders
       },
       fleet: {
+        totalDrivers,
         availableDrivers,
         busyDrivers
+      },
+      users: {
+        total: totalUsers,
+        drivers: totalDrivers,
+        customers: totalCustomers
       },
       merchants,
       finance: {

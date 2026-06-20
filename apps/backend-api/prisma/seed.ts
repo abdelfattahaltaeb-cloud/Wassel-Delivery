@@ -28,6 +28,12 @@ const permissionCatalog = [
   ['tracking.read', 'Read tracking timeline'],
   ['tracking.write', 'Publish tracking updates'],
   ['drivers.read', 'Read drivers'],
+  ['drivers.write', 'Manage drivers'],
+  ['customers.read', 'Read customers'],
+  ['customers.write', 'Manage customers'],
+  ['users.read', 'Read users'],
+  ['users.write', 'Manage users'],
+  ['roles.manage', 'Manage roles and permissions'],
   ['merchants.read', 'Read merchants'],
   ['settlements.read', 'Read settlements'],
   ['roles.read', 'Read roles and permissions']
@@ -40,8 +46,8 @@ const roleCatalog = [
     permissions: permissionCatalog.map(([code]) => code)
   },
   {
-    code: 'operations_manager',
-    name: 'Operations Manager',
+    code: 'admin',
+    name: 'Admin',
     permissions: [
       'dashboard.summary.read',
       'orders.read',
@@ -50,6 +56,11 @@ const roleCatalog = [
       'dispatch.write',
       'tracking.read',
       'drivers.read',
+      'drivers.write',
+      'customers.read',
+      'customers.write',
+      'users.read',
+      'users.write',
       'merchants.read',
       'settlements.read'
     ]
@@ -67,6 +78,16 @@ const roleCatalog = [
     ]
   },
   {
+    code: 'finance',
+    name: 'Finance',
+    permissions: ['dashboard.summary.read', 'orders.read', 'settlements.read', 'users.read']
+  },
+  {
+    code: 'support',
+    name: 'Support',
+    permissions: ['orders.read', 'tracking.read', 'customers.read', 'users.read']
+  },
+  {
     code: 'driver',
     name: 'Driver',
     permissions: ['orders.read', 'orders.write', 'tracking.write']
@@ -74,6 +95,11 @@ const roleCatalog = [
   {
     code: 'customer',
     name: 'Customer',
+    permissions: ['orders.read', 'orders.write', 'tracking.read']
+  },
+  {
+    code: 'merchant_admin',
+    name: 'Merchant Admin',
     permissions: ['orders.read', 'orders.write', 'tracking.read']
   }
 ] as const;

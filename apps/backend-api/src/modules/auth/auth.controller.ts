@@ -6,6 +6,7 @@ import { Public } from '../../common/auth/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterCustomerDto } from './dto/register-customer.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -17,6 +18,13 @@ export class AuthController {
   @Post('login')
   login(@Body() body: LoginDto) {
     return this.authService.login(body);
+  }
+
+  @Public()
+  @HttpCode(201)
+  @Post('register/customer')
+  registerCustomer(@Body() body: RegisterCustomerDto) {
+    return this.authService.registerCustomer(body);
   }
 
   @Public()

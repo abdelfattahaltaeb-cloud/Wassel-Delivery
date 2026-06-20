@@ -68,6 +68,39 @@ class WasselApiClient extends ChangeNotifier {
     return session;
   }
 
+  Future<AuthSession> registerCustomer({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    required String confirmPassword,
+    required String city,
+    String? defaultArea,
+    String? defaultPickupAddress,
+  }) async {
+    final payload = await postJson(
+      environment.customerRegisterPath,
+      authenticated: false,
+      allowRefresh: false,
+      body: {
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'email': email.trim(),
+        'password': password,
+        'confirmPassword': confirmPassword,
+        'city': city.trim(),
+        if (defaultArea?.trim().isNotEmpty == true)
+          'defaultArea': defaultArea!.trim(),
+        if (defaultPickupAddress?.trim().isNotEmpty == true)
+          'defaultPickupAddress': defaultPickupAddress!.trim(),
+      },
+    );
+    final session = AuthSession.fromJson(payload as Map<String, dynamic>);
+    await _persistSession(session);
+
+    return session;
+  }
+
   Future<void> logout() async {
     final refreshToken = _currentSession?.refreshToken;
     final logoutPath = environment.logoutPath;

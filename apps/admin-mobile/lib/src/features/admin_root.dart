@@ -301,9 +301,27 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
             ),
             const SizedBox(height: 12),
             _buildStatCard(
+              'المستخدمون',
+              summary.totalUsers.toString(),
+              Icons.manage_accounts_rounded,
+            ),
+            const SizedBox(height: 12),
+            _buildStatCard(
+              'حسابات العملاء',
+              summary.totalCustomers.toString(),
+              Icons.person_rounded,
+            ),
+            const SizedBox(height: 12),
+            _buildStatCard(
               'الطلبات النشطة',
               summary.activeOrders.toString(),
               Icons.route_rounded,
+            ),
+            const SizedBox(height: 12),
+            _buildStatCard(
+              'إجمالي المناديب',
+              summary.totalDrivers.toString(),
+              Icons.groups_rounded,
             ),
             const SizedBox(height: 12),
             _buildStatCard(

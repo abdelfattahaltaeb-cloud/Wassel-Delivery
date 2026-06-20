@@ -14,6 +14,9 @@ class DashboardSummary {
     required this.failedOrders,
     required this.availableDrivers,
     required this.busyDrivers,
+    required this.totalUsers,
+    required this.totalDrivers,
+    required this.totalCustomers,
     required this.merchants,
     required this.pendingSettlementAmount,
     required this.codVolume,
@@ -25,6 +28,9 @@ class DashboardSummary {
   final int failedOrders;
   final int availableDrivers;
   final int busyDrivers;
+  final int totalUsers;
+  final int totalDrivers;
+  final int totalCustomers;
   final int merchants;
   final double pendingSettlementAmount;
   final double codVolume;
@@ -32,6 +38,7 @@ class DashboardSummary {
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     final orders = json['orders'] as Map<String, dynamic>? ?? const {};
     final fleet = json['fleet'] as Map<String, dynamic>? ?? const {};
+    final users = json['users'] as Map<String, dynamic>? ?? const {};
     final finance = json['finance'] as Map<String, dynamic>? ?? const {};
 
     return DashboardSummary(
@@ -41,6 +48,10 @@ class DashboardSummary {
       failedOrders: orders['failed'] as int? ?? 0,
       availableDrivers: fleet['availableDrivers'] as int? ?? 0,
       busyDrivers: fleet['busyDrivers'] as int? ?? 0,
+      totalUsers: users['total'] as int? ?? 0,
+      totalDrivers:
+          users['drivers'] as int? ?? fleet['totalDrivers'] as int? ?? 0,
+      totalCustomers: users['customers'] as int? ?? 0,
       merchants: json['merchants'] as int? ?? 0,
       pendingSettlementAmount: _asDouble(finance['pendingSettlementAmount']),
       codVolume: _asDouble(finance['codVolume']),

@@ -8,7 +8,9 @@ import type { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user.interface';
 import { hashSecret, verifySecret } from '../../common/security/password.util';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { UsersService } from '../users/users.service';
 import type { LoginDto } from './dto/login.dto';
+import type { RegisterCustomerDto } from './dto/register-customer.dto';
 import type { AuthSession, IssuedSession, JwtTokenPayload } from './auth.types';
 
 const authUserInclude = {
@@ -43,7 +45,8 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService
   ) {}
 
   async login(body: LoginDto): Promise<AuthSession> {
@@ -92,6 +95,15 @@ export class AuthService {
         tokenFamilyId: issuedSession.familyId
       })
     };
+  }
+
+  async registerCustomer(body: RegisterCustomerDto): Promise<AuthSession> {
+    await this.usersService.registerCustomer(body);
+
+    return this.login({
+      email: body.email,
+      password: body.password
+    });
   }
 
   async refresh(refreshToken: string): Promise<AuthSession> {

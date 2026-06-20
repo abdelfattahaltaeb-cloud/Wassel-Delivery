@@ -49,6 +49,16 @@ export async function getSessionUserOrRedirect() {
   }
 }
 
+export async function getAdminSessionOrRedirect() {
+  const session = await getSessionUserOrRedirect();
+
+  if (session.user.roles.includes('driver') || session.user.roles.includes('customer')) {
+    redirect('/logout');
+  }
+
+  return session;
+}
+
 export async function storeSession(tokens: { accessToken: string; refreshToken: string }) {
   const cookieStore = await cookies();
 

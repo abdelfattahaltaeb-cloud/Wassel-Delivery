@@ -4,6 +4,7 @@ class WasselMobileEnvironment {
   const WasselMobileEnvironment({
     required this.apiBaseUrl,
     required this.loginPath,
+    required this.customerRegisterPath,
     required this.refreshPath,
     required this.logoutPath,
     required this.seedPassword,
@@ -12,6 +13,7 @@ class WasselMobileEnvironment {
 
   final String apiBaseUrl;
   final String loginPath;
+  final String customerRegisterPath;
   final String? refreshPath;
   final String? logoutPath;
   final String seedPassword;
@@ -32,6 +34,12 @@ class WasselMobileEnvironment {
         const String.fromEnvironment(
           'WASSEL_LOGIN_PATH',
           defaultValue: '/auth/login',
+        ),
+      ),
+      customerRegisterPath: _normalizedPath(
+        const String.fromEnvironment(
+          'WASSEL_CUSTOMER_REGISTER_PATH',
+          defaultValue: '/auth/register/customer',
         ),
       ),
       refreshPath: _normalizedOptionalPath(

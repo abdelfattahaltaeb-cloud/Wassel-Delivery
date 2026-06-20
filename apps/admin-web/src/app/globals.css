@@ -289,6 +289,15 @@ a {
   grid-template-columns: 1fr 1fr 1.2fr 1fr 0.9fr 1.4fr;
 }
 
+.users-table {
+  min-width: 1280px;
+}
+
+.users-table .data-table-header,
+.users-table .data-table-row {
+  grid-template-columns: 1fr 1.2fr 0.85fr 0.9fr 0.7fr 0.95fr 0.9fr 0.9fr 0.85fr 1.6fr;
+}
+
 .mini-table-header,
 .mini-table-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -525,6 +534,27 @@ a {
   font: inherit;
 }
 
+.compact-input {
+  min-height: 42px;
+  max-width: 190px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .submit-button {
   display: inline-flex;
   justify-content: center;
@@ -688,7 +718,8 @@ a {
   .data-table.operational-table,
   .data-table.settlements-table,
   .data-table.merchants-table,
-  .data-table.drivers-table {
+  .data-table.drivers-table,
+  .data-table.users-table {
     display: none;
   }
 
@@ -705,6 +736,10 @@ a {
   .app-shell,
   .login-layout {
     padding: 0.85rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .sidebar-card,

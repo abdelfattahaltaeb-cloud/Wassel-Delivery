@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 
 import { AdminShell } from '../../components/admin-shell';
-import { getSessionUserOrRedirect } from '../../lib/auth';
+import { getAdminSessionOrRedirect } from '../../lib/auth';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const session = await getSessionUserOrRedirect();
+  const session = await getAdminSessionOrRedirect();
 
   return <AdminShell user={session.user}>{children}</AdminShell>;
 }

@@ -16,5 +16,27 @@ class AuthRepository {
     return _client.login(email: email, password: password);
   }
 
+  Future<AuthSession> registerCustomer({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    required String confirmPassword,
+    required String city,
+    String? defaultArea,
+    String? defaultPickupAddress,
+  }) {
+    return _client.registerCustomer(
+      name: name,
+      phone: phone,
+      email: email,
+      password: password,
+      confirmPassword: confirmPassword,
+      city: city,
+      defaultArea: defaultArea,
+      defaultPickupAddress: defaultPickupAddress,
+    );
+  }
+
   Future<void> logout() => _client.logout();
 }

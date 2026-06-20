@@ -9,6 +9,7 @@ export const navigationItems: NavigationItem[] = [
   { href: '/orders', label: 'الطلبات', description: 'متابعة دورة الطلبات' },
   { href: '/dispatch', label: 'التوزيع', description: 'إدارة التخصيص والتشغيل' },
   { href: '/drivers', label: 'السائقون', description: 'جاهزية السائقين والفرق' },
+  { href: '/users', label: 'إدارة المستخدمين', description: 'إنشاء الحسابات وربط الأدوار والملفات' },
   { href: '/merchants', label: 'التجار', description: 'شركاء التشغيل والاتفاقيات' },
   { href: '/settlements', label: 'التسويات', description: 'الحركة المالية والتسوية' },
   { href: '/reports', label: 'التقارير', description: 'المؤشرات والتحليلات' },

@@ -33,6 +33,14 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
     text: developmentSeedCustomerEmail,
   );
   final _passwordController = TextEditingController();
+  final _registerNameController = TextEditingController();
+  final _registerPhoneController = TextEditingController();
+  final _registerEmailController = TextEditingController();
+  final _registerPasswordController = TextEditingController();
+  final _registerConfirmPasswordController = TextEditingController();
+  final _registerCityController = TextEditingController(text: 'طرابلس');
+  final _registerAreaController = TextEditingController();
+  final _registerPickupAddressController = TextEditingController();
   final _pickupAddressController = TextEditingController(
     text: 'سوق الجمعة، طرابلس',
   );
@@ -52,6 +60,7 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
   String? _selectedOrderId;
   TrackingSnapshot? _publicTracking;
   bool _submitting = false;
+  bool _showRegistration = false;
 
   @override
   void initState() {
@@ -64,6 +73,14 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _registerNameController.dispose();
+    _registerPhoneController.dispose();
+    _registerEmailController.dispose();
+    _registerPasswordController.dispose();
+    _registerConfirmPasswordController.dispose();
+    _registerCityController.dispose();
+    _registerAreaController.dispose();
+    _registerPickupAddressController.dispose();
     _pickupAddressController.dispose();
     _dropoffAddressController.dispose();
     _pickupNameController.dispose();
@@ -102,6 +119,41 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+      _reloadOrders();
+    } catch (error) {
+      _showMessage(error.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleRegistration() async {
+    final validationMessage = _validateRegistration();
+    if (validationMessage != null) {
+      _showMessage(validationMessage);
+      return;
+    }
+
+    setState(() {
+      _submitting = true;
+    });
+
+    try {
+      await widget.authRepository.registerCustomer(
+        name: _registerNameController.text,
+        phone: _registerPhoneController.text,
+        email: _registerEmailController.text,
+        password: _registerPasswordController.text,
+        confirmPassword: _registerConfirmPasswordController.text,
+        city: _registerCityController.text,
+        defaultArea: _registerAreaController.text,
+        defaultPickupAddress: _registerPickupAddressController.text,
+      );
+      _showMessage('تم إنشاء الحساب بنجاح.');
       _reloadOrders();
     } catch (error) {
       _showMessage(error.toString());
@@ -200,6 +252,37 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  String? _validateRegistration() {
+    if (_registerNameController.text.trim().isEmpty) {
+      return 'الاسم مطلوب.';
+    }
+
+    if (_registerPhoneController.text.trim().isEmpty) {
+      return 'رقم الهاتف مطلوب.';
+    }
+
+    final email = _registerEmailController.text.trim();
+    if (email.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return 'يرجى إدخال بريد إلكتروني صحيح.';
+    }
+
+    if (_registerPasswordController.text.length < 8) {
+      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.';
+    }
+
+    if (_registerPasswordController.text !=
+        _registerConfirmPasswordController.text) {
+      return 'كلمة المرور وتأكيدها غير متطابقين.';
+    }
+
+    if (_registerCityController.text.trim().isEmpty) {
+      return 'المدينة مطلوبة.';
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<void>(
@@ -229,7 +312,9 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
 
   Widget _buildLoginScreen() {
     return Scaffold(
-      appBar: AppBar(title: const Text('تسجيل دخول العميل')),
+      appBar: AppBar(
+        title: Text(_showRegistration ? 'إنشاء حساب' : 'تسجيل دخول العميل'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -242,32 +327,116 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'البريد الإلكتروني',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'كلمة المرور'),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: _submitting ? null : _handleLogin,
-                    icon: const Icon(Icons.login_rounded),
-                    label: Text(_submitting ? 'جارٍ تسجيل الدخول...' : 'دخول'),
-                  ),
-                ],
-              ),
+              child: _showRegistration
+                  ? _buildRegistrationForm()
+                  : _buildLoginForm(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Column(
+      children: [
+        TextField(
+          controller: _emailController,
+          decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _passwordController,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'كلمة المرور'),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _submitting ? null : _handleLogin,
+          icon: const Icon(Icons.login_rounded),
+          label: Text(_submitting ? 'جارٍ تسجيل الدخول...' : 'دخول'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _submitting
+              ? null
+              : () {
+                  setState(() {
+                    _showRegistration = true;
+                  });
+                },
+          child: const Text('إنشاء حساب جديد'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegistrationForm() {
+    return Column(
+      children: [
+        TextField(
+          controller: _registerNameController,
+          decoration: const InputDecoration(labelText: 'الاسم'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerPhoneController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(labelText: 'رقم الهاتف'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerEmailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerPasswordController,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'كلمة المرور'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerConfirmPasswordController,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'تأكيد كلمة المرور'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerCityController,
+          decoration: const InputDecoration(labelText: 'المدينة'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerAreaController,
+          decoration: const InputDecoration(labelText: 'المنطقة الافتراضية'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _registerPickupAddressController,
+          decoration: const InputDecoration(
+            labelText: 'عنوان الاستلام الافتراضي',
+          ),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _submitting ? null : _handleRegistration,
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: Text(_submitting ? 'جارٍ إنشاء الحساب...' : 'إنشاء حساب'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _submitting
+              ? null
+              : () {
+                  setState(() {
+                    _showRegistration = false;
+                  });
+                },
+          child: const Text('لدي حساب بالفعل'),
+        ),
+      ],
     );
   }
 

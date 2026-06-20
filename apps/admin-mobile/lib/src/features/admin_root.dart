@@ -34,9 +34,7 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
   Future<List<SettlementRecord>>? _settlementsFuture;
   Future<DashboardSummary>? _dashboardFuture;
 
-  final _emailController = TextEditingController(
-    text: developmentSeedAdminEmail,
-  );
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   int _selectedIndex = 0;
@@ -46,7 +44,6 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
   @override
   void initState() {
     super.initState();
-    _passwordController.text = widget.environment.seedPassword;
     _bootstrapFuture = _bootstrap();
   }
 
@@ -762,5 +759,3 @@ class _AdminRootScreenState extends State<AdminRootScreen> {
     );
   }
 }
-
-const developmentSeedAdminEmail = 'admin@wassel-delivery.local';

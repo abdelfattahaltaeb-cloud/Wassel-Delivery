@@ -29,9 +29,7 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
   late final Future<void> _bootstrapFuture;
   Future<List<OrderRecord>>? _ordersFuture;
 
-  final _emailController = TextEditingController(
-    text: developmentSeedDriverEmail,
-  );
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _noteController = TextEditingController();
   final _photoUrlController = TextEditingController(
@@ -54,7 +52,6 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
   @override
   void initState() {
     super.initState();
-    _passwordController.text = widget.environment.seedPassword;
     _bootstrapFuture = _bootstrap();
   }
 
@@ -871,7 +868,6 @@ class _DriverRootScreenState extends State<DriverRootScreen> {
   }
 }
 
-const developmentSeedDriverEmail = 'driver@wassel-delivery.local';
 const _failureReasons = [
   'تعذر الوصول إلى العميل',
   'العنوان غير واضح',

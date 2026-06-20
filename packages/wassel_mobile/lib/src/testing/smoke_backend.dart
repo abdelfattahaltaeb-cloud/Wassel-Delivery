@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 class SmokeBackend {
-  SmokeBackend({required this.baseUrl, required this.seedPassword});
+  SmokeBackend({required this.baseUrl, required this.testPassword});
 
   final String baseUrl;
-  final String seedPassword;
+  final String testPassword;
 
   static SmokeBackend current() {
     final configuredBaseUrl = const String.fromEnvironment(
@@ -18,10 +18,7 @@ class SmokeBackend {
 
     return SmokeBackend(
       baseUrl: normalizedBaseUrl,
-      seedPassword: const String.fromEnvironment(
-        'WASSEL_SEED_DEV_PASSWORD',
-        defaultValue: 'DevOnly123!ChangeMe',
-      ),
+      testPassword: const String.fromEnvironment('WASSEL_SMOKE_TEST_PASSWORD'),
     );
   }
 
@@ -44,11 +41,17 @@ class SmokeBackend {
   Future<String> loginAsDriver() => login('driver@wassel-delivery.local');
 
   Future<String> login(String email) async {
+    if (testPassword.isEmpty) {
+      throw StateError(
+        'WASSEL_SMOKE_TEST_PASSWORD must be set for smoke login.',
+      );
+    }
+
     final response = await request(
       'POST',
       '/auth/login',
       authenticated: false,
-      body: {'email': email, 'password': seedPassword},
+      body: {'email': email, 'password': testPassword},
     );
 
     final accessToken = response['accessToken'];

@@ -29,9 +29,7 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
   late final Future<void> _bootstrapFuture;
   Future<List<OrderRecord>>? _ordersFuture;
 
-  final _emailController = TextEditingController(
-    text: developmentSeedCustomerEmail,
-  );
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _registerNameController = TextEditingController();
   final _registerPhoneController = TextEditingController();
@@ -65,7 +63,6 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
   @override
   void initState() {
     super.initState();
-    _passwordController.text = widget.environment.seedPassword;
     _bootstrapFuture = _bootstrap();
   }
 
@@ -945,5 +942,3 @@ class _CustomerRootScreenState extends State<CustomerRootScreen> {
     return formatArabicDateTime(entries.last.createdAt);
   }
 }
-
-const developmentSeedCustomerEmail = 'customer@wassel-delivery.local';

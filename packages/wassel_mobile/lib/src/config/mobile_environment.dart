@@ -7,7 +7,6 @@ class WasselMobileEnvironment {
     required this.customerRegisterPath,
     required this.refreshPath,
     required this.logoutPath,
-    required this.seedPassword,
     required this.requestTimeout,
   });
 
@@ -16,7 +15,6 @@ class WasselMobileEnvironment {
   final String customerRegisterPath;
   final String? refreshPath;
   final String? logoutPath;
-  final String seedPassword;
   final Duration requestTimeout;
 
   factory WasselMobileEnvironment.current() {
@@ -53,10 +51,6 @@ class WasselMobileEnvironment {
           'WASSEL_LOGOUT_PATH',
           defaultValue: '/auth/logout',
         ),
-      ),
-      seedPassword: const String.fromEnvironment(
-        'WASSEL_SEED_DEV_PASSWORD',
-        defaultValue: 'DevOnly123!ChangeMe',
       ),
       requestTimeout: const Duration(seconds: 20),
     );

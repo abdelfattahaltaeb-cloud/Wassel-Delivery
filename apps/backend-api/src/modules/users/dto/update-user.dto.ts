@@ -28,6 +28,6 @@ export class UpdateUserDto {
 
 export class ResetPasswordDto {
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   temporaryPassword!: string;
 }

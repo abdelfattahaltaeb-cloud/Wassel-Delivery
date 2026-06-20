@@ -22,7 +22,7 @@ export class CreateCustomerUserDto {
   defaultAddress?: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   temporaryPassword!: string;
 
   @IsOptional()

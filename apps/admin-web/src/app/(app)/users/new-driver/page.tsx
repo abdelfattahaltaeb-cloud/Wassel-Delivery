@@ -29,7 +29,7 @@ export default function NewDriverPage() {
           </select>
         </label>
         <label className="field"><span className="input-label">لوحة المركبة</span><input className="input" name="vehiclePlate" /></label>
-        <label className="field"><span className="input-label">كلمة المرور المؤقتة</span><input className="input" name="temporaryPassword" type="password" minLength={8} required /></label>
+        <label className="field"><span className="input-label">كلمة المرور المؤقتة</span><input className="input" name="temporaryPassword" type="password" minLength={6} required /></label>
         <label className="field">
           <span className="input-label">الحالة</span>
           <select className="input" name="status" defaultValue="ACTIVE">

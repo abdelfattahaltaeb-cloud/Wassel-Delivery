@@ -33,7 +33,7 @@ export class CreateUserDto {
   status?: (typeof userStatuses)[number];
 
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   temporaryPassword!: string;
 
   @IsOptional()

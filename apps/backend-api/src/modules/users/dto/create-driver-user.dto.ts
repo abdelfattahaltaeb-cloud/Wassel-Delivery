@@ -35,7 +35,7 @@ export class CreateDriverUserDto {
   vehiclePlate?: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   temporaryPassword!: string;
 
   @IsOptional()

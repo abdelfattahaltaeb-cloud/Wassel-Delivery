@@ -111,7 +111,7 @@ export default async function UsersPage() {
                 {canReset ? (
                   <form className="inline-form" action={resetPasswordAction}>
                     <input type="hidden" name="userId" value={user.id} />
-                    <input className="input compact-input" name="temporaryPassword" type="password" placeholder="كلمة مرور مؤقتة" minLength={8} required />
+                    <input className="input compact-input" name="temporaryPassword" type="password" placeholder="كلمة مرور مؤقتة" minLength={6} required />
                     <button className="secondary-link compact-button action-link" type="submit">إعادة تعيين كلمة المرور</button>
                   </form>
                 ) : null}

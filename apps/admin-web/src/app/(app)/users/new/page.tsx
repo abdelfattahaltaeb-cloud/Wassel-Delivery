@@ -61,7 +61,7 @@ export default async function NewUserPage() {
         </label>
         <label className="field">
           <span className="input-label">كلمة المرور المؤقتة</span>
-          <input className="input" name="temporaryPassword" type="password" minLength={8} required />
+          <input className="input" name="temporaryPassword" type="password" minLength={6} required />
         </label>
         <label className="field detail-card-wide">
           <span className="input-label">العنوان الافتراضي للعميل إن وجد</span>

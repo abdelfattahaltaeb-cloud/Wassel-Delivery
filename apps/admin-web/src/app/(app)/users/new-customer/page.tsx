@@ -18,7 +18,7 @@ export default function NewCustomerPage() {
         <label className="field"><span className="input-label">المدينة</span><input className="input" name="city" required /></label>
         <label className="field"><span className="input-label">المنطقة</span><input className="input" name="area" /></label>
         <label className="field"><span className="input-label">العنوان الافتراضي</span><input className="input" name="defaultAddress" /></label>
-        <label className="field"><span className="input-label">كلمة المرور المؤقتة</span><input className="input" name="temporaryPassword" type="password" minLength={8} required /></label>
+        <label className="field"><span className="input-label">كلمة المرور المؤقتة</span><input className="input" name="temporaryPassword" type="password" minLength={6} required /></label>
         <label className="field">
           <span className="input-label">الحالة</span>
           <select className="input" name="status" defaultValue="ACTIVE">

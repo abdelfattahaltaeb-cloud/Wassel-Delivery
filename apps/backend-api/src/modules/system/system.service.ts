@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -9,12 +9,22 @@ export class SystemService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService
+    @Optional() private readonly redisService?: RedisService
   ) {}
 
   async getHealth() {
     await this.prismaService.$queryRawUnsafe('SELECT 1');
-    await this.redisService.ping();
+
+    const lowCostMode = this.configService.get<boolean>('LOW_COST_MODE', false);
+    const redisStatus = lowCostMode ? 'disabled' : 'ok';
+
+    if (!lowCostMode) {
+      if (!this.redisService) {
+        throw new Error('Redis service is required outside low-cost mode');
+      }
+
+      await this.redisService.ping();
+    }
 
     return {
       status: 'ok' as const,
@@ -22,7 +32,7 @@ export class SystemService {
       timestamp: new Date().toISOString(),
       dependencies: {
         postgres: 'ok',
-        redis: 'ok'
+        redis: redisStatus
       }
     };
   }

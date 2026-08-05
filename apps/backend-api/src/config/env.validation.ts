@@ -1,3 +1,5 @@
+import { isLowCostModeEnabled } from './runtime-mode';
+
 type EnvironmentInput = Record<string, unknown>;
 
 function getRequiredString(input: EnvironmentInput, key: string): string {
@@ -33,6 +35,7 @@ export function validateEnv(config: EnvironmentInput) {
     PORT: getNumber(config, 'PORT', 4000),
     API_PREFIX: typeof config.API_PREFIX === 'string' ? config.API_PREFIX : 'api',
     CORS_ORIGIN: typeof config.CORS_ORIGIN === 'string' ? config.CORS_ORIGIN : '*',
+    LOW_COST_MODE: isLowCostModeEnabled(config),
     DATABASE_URL: getRequiredString(config, 'DATABASE_URL'),
     JWT_ACCESS_SECRET: getRequiredString(config, 'JWT_ACCESS_SECRET'),
     JWT_REFRESH_SECRET: getRequiredString(config, 'JWT_REFRESH_SECRET'),

@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { PermissionsGuard } from './common/auth/permissions.guard';
 import { appConfig } from './config/app.config';
 import { validateEnv } from './config/env.validation';
+import { isLowCostModeEnabled } from './config/runtime-mode';
 import { QueueModule } from './core/queue/queue.module';
 import { PrismaModule } from './core/prisma/prisma.module';
 import { RedisModule } from './core/redis/redis.module';
@@ -24,6 +25,8 @@ import { SystemModule } from './modules/system/system.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
 import { UsersModule } from './modules/users/users.module';
 
+const redisBackedImports = isLowCostModeEnabled() ? [] : [RedisModule, QueueModule];
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,8 +36,7 @@ import { UsersModule } from './modules/users/users.module';
       validate: validateEnv
     }),
     PrismaModule,
-    RedisModule,
-    QueueModule,
+    ...redisBackedImports,
     SystemModule,
     AuthModule,
     UsersModule,

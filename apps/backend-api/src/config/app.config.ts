@@ -1,8 +1,11 @@
 import { registerAs } from '@nestjs/config';
 
+import { isLowCostModeEnabled } from './runtime-mode';
+
 export const appConfig = registerAs('app', () => ({
   serviceName: 'backend-api',
   environment: process.env.NODE_ENV ?? 'development',
+  lowCostMode: isLowCostModeEnabled(),
   port: Number(process.env.PORT ?? 4000),
   apiPrefix: process.env.API_PREFIX ?? 'api',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',

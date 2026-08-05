@@ -15,6 +15,8 @@ BACKEND_IMAGE="${BACKEND_IMAGE:-${IMAGE_PREFIX}/backend-api:${COMMIT_SHA:-manual
 ADMIN_IMAGE="${ADMIN_IMAGE:-${IMAGE_PREFIX}/admin-web:${COMMIT_SHA:-manual}}"
 PUBLIC_IMAGE="${PUBLIC_IMAGE:-${IMAGE_PREFIX}/public-web:${COMMIT_SHA:-manual}}"
 
+LOW_COST_MODE="${LOW_COST_MODE:-false}"
+
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <build-images|deploy-backend|deploy-admin|deploy-public|deploy-all>" >&2
   exit 1
@@ -31,9 +33,19 @@ build_images() {
 
 deploy_backend() {
   : "${DATABASE_URL:?DATABASE_URL is required}"
-  : "${REDIS_HOST:?REDIS_HOST is required}"
   : "${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}"
   : "${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}"
+
+  backend_env_vars="NODE_ENV=production,PORT=8080,API_PREFIX=api,CORS_ORIGIN=https://admin.wassel.net.ly,APP_VERSION=0.1.0,COMMIT_SHA=${COMMIT_SHA:-manual},JWT_ISSUER=wassel-delivery-api,JWT_AUDIENCE=wassel-delivery-platform,LOW_COST_MODE=${LOW_COST_MODE},DATABASE_URL=${DATABASE_URL},JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET},JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET},JWT_ACCESS_TTL=${JWT_ACCESS_TTL:-15m},JWT_REFRESH_TTL=${JWT_REFRESH_TTL:-7d}"
+
+  if [[ "$LOW_COST_MODE" != "true" ]]; then
+    : "${REDIS_HOST:?REDIS_HOST is required unless LOW_COST_MODE=true}"
+    backend_env_vars="${backend_env_vars},REDIS_HOST=${REDIS_HOST},REDIS_PORT=${REDIS_PORT:-6379}"
+
+    if [[ -n "${REDIS_PASSWORD:-}" ]]; then
+      backend_env_vars="${backend_env_vars},REDIS_PASSWORD=${REDIS_PASSWORD}"
+    fi
+  fi
 
   gcloud run deploy "$BACKEND_SERVICE" \
     --project "$PROJECT_ID" \
@@ -41,7 +53,11 @@ deploy_backend() {
     --image "$BACKEND_IMAGE" \
     --allow-unauthenticated \
     --port 8080 \
-    --set-env-vars "NODE_ENV=production,PORT=8080,API_PREFIX=api,CORS_ORIGIN=https://admin.wassel.net.ly,APP_VERSION=0.1.0,COMMIT_SHA=${COMMIT_SHA:-manual},JWT_ISSUER=wassel-delivery-api,JWT_AUDIENCE=wassel-delivery-platform,REDIS_HOST=${REDIS_HOST},REDIS_PORT=${REDIS_PORT:-6379},DATABASE_URL=${DATABASE_URL},JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET},JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET},JWT_ACCESS_TTL=${JWT_ACCESS_TTL:-15m},JWT_REFRESH_TTL=${JWT_REFRESH_TTL:-7d}"
+    --min-instances 0 \
+    --max-instances 1 \
+    --cpu 1 \
+    --memory 512Mi \
+    --set-env-vars "$backend_env_vars"
 }
 
 deploy_admin() {
@@ -51,6 +67,10 @@ deploy_admin() {
     --image "$ADMIN_IMAGE" \
     --allow-unauthenticated \
     --port 8080 \
+    --min-instances 0 \
+    --max-instances 1 \
+    --cpu 1 \
+    --memory 512Mi \
     --set-env-vars "NODE_ENV=production,PORT=8080,HOSTNAME=0.0.0.0,API_BASE_URL=https://api.wassel.net.ly/api,NEXT_PUBLIC_API_BASE_URL=https://api.wassel.net.ly/api,SESSION_COOKIE_DOMAIN=admin.wassel.net.ly,SESSION_COOKIE_SECURE=true,SESSION_COOKIE_SAME_SITE=lax"
 }
 
@@ -61,6 +81,10 @@ deploy_public() {
     --image "$PUBLIC_IMAGE" \
     --allow-unauthenticated \
     --port 8080 \
+    --min-instances 0 \
+    --max-instances 1 \
+    --cpu 1 \
+    --memory 512Mi \
     --set-env-vars "NODE_ENV=production,PORT=8080,HOSTNAME=0.0.0.0"
 }
 

@@ -1,23 +1,25 @@
-import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
-import type { Queue } from 'bullmq';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { createFeatureStatus } from '../../common/feature-status';
-import { notificationsQueueName } from '../../core/queue/queue.constants';
+import type { NotificationQueuePort } from './notification-queue.port';
+import { notificationQueueToken } from './notification-queue.port';
 
 @Injectable()
 export class NotificationsService {
-  constructor(@InjectQueue(notificationsQueueName) private readonly notificationsQueue: Queue) {}
+  constructor(
+    @Inject(notificationQueueToken) private readonly notificationQueue: NotificationQueuePort
+  ) {}
 
   getFoundationStatus() {
     return createFeatureStatus('notifications', [
-      'Notifications queue is wired through BullMQ on Redis.',
+      'Notifications use BullMQ on Redis by default.',
+      'LOW_COST_MODE=true disables Redis-backed notifications with a safe no-op queue.',
       'Channel-specific providers remain for Phase 2.'
     ]);
   }
 
   async enqueueFoundationProbe() {
-    await this.notificationsQueue.add('foundation-probe', {
+    return this.notificationQueue.addFoundationProbe({
       recipientId: 'placeholder-recipient',
       channel: 'push',
       message: 'foundation-ready'

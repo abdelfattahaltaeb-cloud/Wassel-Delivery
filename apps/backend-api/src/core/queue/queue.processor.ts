@@ -2,12 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 
 import { notificationsQueueName } from './queue.constants';
-
-type NotificationJobPayload = {
-  recipientId: string;
-  channel: 'push' | 'sms' | 'email';
-  message: string;
-};
+import type { NotificationJobPayload } from '../../modules/notifications/notification-queue.port';
 
 @Processor(notificationsQueueName)
 export class NotificationsProcessor extends WorkerHost {

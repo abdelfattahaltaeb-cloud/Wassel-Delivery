@@ -30,3 +30,12 @@ Validation:
 
 - Do not ask for screenshots for validation.
 - Use commands, logs, tests, build results, HTTP responses, and Cloud/GitHub status checks.
+
+Low-cost testing mode:
+
+- Use `LOW_COST_MODE=true` for controlled low-cost testing.
+- Redis and BullMQ-backed notification workers are disabled in low-cost mode.
+- Do not attach a VPC connector for low-cost Cloud Run testing unless explicitly approved.
+- Set Cloud Run min instances to `0` and max instances to `1`.
+- Start Cloud SQL only during manual test windows.
+- Stop Cloud SQL again after testing by restoring `activationPolicy=NEVER`.
